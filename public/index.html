@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Drafts Web Capture</title>
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-feather"></i> Drafts Web Capture</h1>
+            <p class="subtitle">Capture text to your Drafts library</p>
+        </header>
+
+        <main>
+            <div id="alert-container"></div>
+
+            <!-- Sign in with Apple (hidden when authenticated) -->
+            <div id="sign-in-section">
+                <div class="sign-in-box">
+                    <p>Sign-in with your Apple ID to enable capture</p>
+                    <div id="apple-sign-in-button"></div>
+                </div>
+            </div>
+
+            <!-- Draft Queue List (shown when authenticated) -->
+            <div class="draft-queue-section" style="display: none;">
+                <h2><i class="fas fa-list"></i> Your Drafts (<span id="queue-count">0</span>)</h2>
+                <div id="draft-list" class="draft-list"></div>
+            </div>
+
+            <div class="editor-container">
+                <form id="capture-form" class="capture-form">
+                <div class="editor-tabs">
+                    <button type="button" class="tab-button active" data-tab="edit">✏️ Edit</button>
+                    <button type="button" class="tab-button" data-tab="preview">👁️ Preview</button>
+                </div>
+
+                <div class="form-group">
+                    <div id="edit-tab" class="tab-content active">
+                        <textarea 
+                            id="draft-content" 
+                            name="content" 
+                            rows="15" 
+                            placeholder="Enter your text here... Supports **Markdown** formatting!" 
+                            required></textarea>
+                    </div>
+                    <div id="preview-tab" class="tab-content">
+                        <div id="preview-content" class="preview-content"></div>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <div class="form-row">
+                        <label for="draft-tags">Tags:</label>
+                        <input 
+                            type="text" 
+                            id="draft-tags" 
+                            name="tags" 
+                            placeholder="tag1, tag2, tag3">
+                    </div>
+
+                    <div class="form-row">
+                        <label for="draft-syntax">Syntax:</label>
+                        <select id="draft-syntax" name="syntax">
+                            <option value="Plain Text">Plain Text</option>
+                            <option value="Markdown">Markdown</option>
+                            <option value="MultiMarkdown">MultiMarkdown</option>
+                            <option value="GitHub Markdown">GitHub Markdown</option>
+                            <option value="Taskpaper">Taskpaper</option>
+                        </select>
+                    </div>
+
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="draft-flagged" name="flagged">
+                        <label for="draft-flagged" class="checkbox-label">Flagged</label>
+                    </div>
+
+                    <div class="form-row checkbox-row">
+                        <input type="checkbox" id="draft-location" name="useLocation">
+                        <label for="draft-location" class="checkbox-label">Use Location</label>
+                    </div>
+                    
+                    <div class="form-row">
+                        <label for="draft-attachment">Attachment (Optional)</label>
+                        <input type="file" id="draft-attachment" name="attachment" accept=".txt,.md,.pdf,.jpg,.png">
+                        <p class="attachment-hint">Supports: .txt, .md, .pdf, .jpg, .png (Max 5MB)</p>
+                    </div>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus"></i> Add to Queue
+                </button>
+                
+                <div class="queue-controls" style="display: none; margin-top: 15px;">
+                    <button type="button" class="submit-all-btn" onclick="submitAllDrafts()">
+                        <i class="fas fa-paper-plane"></i> Submit All (<span id="queue-count">0</span>)
+                    </button>
+                    <button type="button" class="discard-btn" onclick="discardAllDrafts()">
+                        <i class="fas fa-trash"></i> Discard All
+                    </button>
+                </div>
+                
+                <!-- Sign Out Section (shown when authenticated) -->
+                <div class="auth-section" style="display: none; margin-top: 20px;">
+                    <button type="button" id="sign-out-btn" class="sign-out-btn">
+                        <i class="fas fa-sign-out-alt"></i> Sign Out
+                    </button>
+                    <p style="margin-top: 10px; font-size: 0.9rem; color: #6c757d;">
+                        Signed in with Apple ID. Drafts will sync to your Drafts app.
+                    </p>
+                </div>
+            </form>
+        </main>
+=======
+                <button type="submit" class="submit-btn">
+                    <i class="fas fa-plus"></i> Add to Queue
+                </button>
+                
+                <div class="queue-controls" style="display: none; margin-top: 15px;">
+                    <button type="button" class="submit-all-btn" onclick="submitAllDrafts()">
+                        <i class="fas fa-paper-plane"></i> Submit All (<span id="queue-count">0</span>)
+                    </button>
+                    <button type="button" class="discard-btn" onclick="discardAllDrafts()">
+                        <i class="fas fa-trash"></i> Discard All
+                    </button>
+                </div>
+            </form>
+        </main>
+
+        <footer>
+            <p><a href="https://getdrafts.com" target="_blank">Get Drafts App</a> | Self-hosted Capture</p>
+        </footer>
+    </div>
+
+    <!-- Load CloudKit JS for iCloud integration -->
+    <script src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
+    
+    <!-- Load Markdown and Syntax Highlighting libraries -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/highlight.js@11.9.0/highlight.min.js"></script>
+    <script src="/js/app.js"></script>
+    <script>
+        // Configure marked for GitHub-style Markdown
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            }
+        });
+    </script>
+</body>
+</html>

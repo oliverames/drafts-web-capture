@@ -1,0 +1,162 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+tmp/
+logs/
+*.log
+
+# Runtime data
+data/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build output
+build/
+dist/
+
+# Docker
+docker-compose.override.yml
+.env.docker
+
+# npm debug log
+npm-debug.log*
+
+# Yarn
+yarn-error.log
+yarn-debug.log*
+.pnp.*
+
+# Local history for VS Code
+.history/
+
+# Coverage directory
+coverage/
+
+# Dependency directories
+bower_components/
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# dotenv environment variables file
+.env.test
+.env*.local
+
+# parcel-bundler cache
+.cache
+
+# next.js
+.next/
+out/
+
+# nuxt.js
+.nuxt/
+
+# Gatsby files
+.cache/
+# Comment in the public line in if your site is public
+# public
+.html.test.cache
+
+# vuepress
+.vuepress/dist
+
+# Serverless directories
+.serverless/
+
+# FuseBox cache
+.fusebox/
+
+# DynamoDB Local files
+.dynamodb/
+
+# TernJS port file
+.tern-port
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# vscode extensions
+.vscode/extensions
+
+# Local History for Visual Studio Code
+.history/
+
+# Built Visual Studio Code Extensions
+*.vsix
+
+# DART
+.dart_tool/
+.artifacts/
+.packages
+build/
+
+# Angular
+.angular/
+
+# Environment files
+.env*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Build
+lib/
+
+# npm
+npm-debug.log*
+
+# Yarn
+.yarn-cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
