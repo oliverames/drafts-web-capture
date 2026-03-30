@@ -9,6 +9,10 @@ yarn-error.log*
 .env.local
 .env.*.local
 
+# CloudKit token — injected by server (Express) or CI (GitHub Actions); never commit a real token
+# The placeholder public/config.js with an empty token IS committed for static/offline use
+# public/config.js is only excluded if you manually populate it with a real token locally
+
 # Database
 *.db
 *.sqlite
