@@ -169,6 +169,11 @@
     window.cloudkit = {
         isAuthenticated: function () { return isAuthenticated; },
         createDraft:     createDraftWithCloudKit,
-        signOut:         signOut
+        signOut:         signOut,
+        // Trigger sign-in by programmatically clicking the SDK's button
+        signIn: function () {
+            const btn = document.querySelector('#apple-sign-in-button button');
+            if (btn) btn.click();
+        }
     };
 })();
