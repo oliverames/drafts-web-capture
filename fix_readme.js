@@ -1,4 +1,6 @@
-<p align="center">
+const fs = require('fs');
+
+const readme = `<p align="center">
   <img src="public/img/drafts-icon.png" width="80" height="80" alt="Drafts Web Capture">
 </p>
 
@@ -37,7 +39,7 @@ Drafts features a "Mail Drop" integration, allowing you to send emails to a secr
 
 You can run the web client locally:
 
-```bash
+\`\`\`bash
 # Clone the repository
 git clone https://github.com/oliverames/drafts-web.git
 cd drafts-web
@@ -45,7 +47,7 @@ cd drafts-web
 # Serve the public directory locally
 npx serve public
 # or: python3 -m http.server 8091 --directory public
-```
+\`\`\`
 
 ## Core Features
 
@@ -53,33 +55,33 @@ npx serve public
 - **Offline Queue:** Continue capturing even without an internet connection. Drafts are queued securely in local storage and submitted when you are online.
 - **Rich Editor:** Powered by CodeMirror 6 with full Markdown syntax highlighting.
 - **Multi-Tab Workspace:** Open multiple drafts side-by-side with horizontal tab drag-to-scroll functionality.
-- **Bookmarklet Ready:** Accepts URL parameters (`?text=...` and `?tags=...`) for seamless integration with browser extensions or custom bookmarklets.
+- **Bookmarklet Ready:** Accepts URL parameters (\`?text=...\` and \`?tags=...\`) for seamless integration with browser extensions or custom bookmarklets.
 
 ## Architecture
 
 | Layer | Implementation | Description |
 |---|---|---|
-| **Hosting** | GitHub Pages | Auto-deployed on push to `main` via Actions |
+| **Hosting** | GitHub Pages | Auto-deployed on push to \`main\` via Actions |
 | **Editor** | CodeMirror 6 | Provides Markdown highlighting and text formatting |
-| **Transport** | Cloudflare Worker | `drafts-ck-proxy.oliverames.workers.dev` accepts the payload and uses the Resend API to email the Mail Drop address |
+| **Transport** | Cloudflare Worker | \`drafts-ck-proxy.oliverames.workers.dev\` accepts the payload and uses the Resend API to email the Mail Drop address |
 
 ### The Email Proxy
 
-The frontend sends your draft content to a lightweight Cloudflare Worker. The Worker takes the first line of your draft (plus any tags formatted as `#hashtags`) and sets it as the email Subject, placing the rest of the text in the email Body. It then uses the [Resend API](https://resend.com) to instantly dispatch the email.
+The frontend sends your draft content to a lightweight Cloudflare Worker. The Worker takes the first line of your draft (plus any tags formatted as \`#hashtags\`) and sets it as the email Subject, placing the rest of the text in the email Body. It then uses the [Resend API](https://resend.com) to instantly dispatch the email.
 
 ## Configuration
 
 For production deployments, you must configure your Cloudflare Worker with a Resend API key.
 
-```bash
+\`\`\`bash
 npx wrangler secret put RESEND_API_KEY
-```
+\`\`\`
 
 ## Building / Development
 
-1. Make your changes in the `public/` directory (vanilla HTML/CSS/JS).
-2. Test locally using `npx serve public`.
-3. Push to `main` to trigger the GitHub Pages deployment.
+1. Make your changes in the \`public/\` directory (vanilla HTML/CSS/JS).
+2. Test locally using \`npx serve public\`.
+3. Push to \`main\` to trigger the GitHub Pages deployment.
 
 ---
 
@@ -97,3 +99,6 @@ npx wrangler secret put RESEND_API_KEY
     &bull; <a href="https://bsky.app/profile/oliverames.bsky.social">Bluesky</a>
   </sub>
 </p>
+`;
+
+fs.writeFileSync('README.md', readme);
