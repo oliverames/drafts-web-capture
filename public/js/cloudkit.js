@@ -16,6 +16,13 @@
     // ── Bootstrap ─────────────────────────────────────────────
 
     window.addEventListener('cloudkitloaded', function () {
+        // Wait for the Service Worker proxy to control this page before
+        // initialising CloudKit — ensures api.apple-cloudkit.com requests
+        // are intercepted from the very first call.
+        (window.__swReady || Promise.resolve()).then(function () { _initCloudKit(); });
+    });
+
+    function _initCloudKit() {
         try {
             CloudKit.configure({
                 containers: [{
@@ -51,7 +58,7 @@
             console.error('CloudKit setUpAuth failed:', err);
             showUnauthenticatedUI();
         });
-    });
+    }
 
     // ── UI state ──────────────────────────────────────────────
 
