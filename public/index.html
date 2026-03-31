@@ -117,6 +117,21 @@
 
     <!-- CloudKit token: set window.CLOUDKIT_API_TOKEN to override baked-in token -->
     <script src="config.js"></script>
+    <!-- Proxy: route CloudKit API calls through worker so origin restriction is satisfied -->
+    <script>
+    (function () {
+        var PROXY = 'https://drafts-ck-proxy.oliverames.workers.dev';
+        var _fetch = window.fetch.bind(window);
+        window.fetch = function (resource, init) {
+            if (typeof resource === 'string' && resource.indexOf('api.apple-cloudkit.com') !== -1) {
+                resource = resource.replace('https://api.apple-cloudkit.com', PROXY);
+            } else if (resource instanceof Request && resource.url.indexOf('api.apple-cloudkit.com') !== -1) {
+                resource = new Request(resource.url.replace('https://api.apple-cloudkit.com', PROXY), resource);
+            }
+            return _fetch(resource, init);
+        };
+    })();
+    </script>
     <!-- CloudKit JS SDK — fires 'cloudkitloaded' event when ready -->
     <script async src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
     <!-- CloudKit integration — listens for cloudkitloaded -->
