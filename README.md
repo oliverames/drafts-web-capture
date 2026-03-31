@@ -25,7 +25,7 @@
 
 ---
 
-A static web app that lets you write, tag, and send drafts directly into the [Drafts](https://getdrafts.com) app via Mail Drop—without any custom APIs or databases. Currently deployed at [drafts.amesvt.com](https://drafts.amesvt.com).
+An unofficial static web app that lets you write, tag, and send drafts directly into the [Drafts](https://getdrafts.com) app (by [Agile Tortoise](https://agiletortoise.com)) via Mail Drop. Currently deployed at [drafts.amesvt.com](https://drafts.amesvt.com).
 
 ## Why This Exists
 
@@ -50,10 +50,13 @@ npx serve public
 ## Core Features
 
 - **Mail Drop Sync:** Writes directly to the Drafts app via your secure Mail Drop address.
-- **Offline Queue:** Continue capturing even without an internet connection. Drafts are queued securely in local storage and submitted when you are online.
+- **Offline Queue:** Continue capturing even without an internet connection. Drafts are queued in local storage and submitted when you come back online.
 - **Rich Editor:** Powered by CodeMirror 6 with full Markdown syntax highlighting.
-- **Multi-Tab Workspace:** Open multiple drafts side-by-side with horizontal tab drag-to-scroll functionality.
-- **Bookmarklet Ready:** Accepts URL parameters (`?text=...` and `?tags=...`) for seamless integration with browser extensions or custom bookmarklets.
+- **Write / Preview Toggle:** Switch between writing and a live rendered preview. Supports Markdown, MultiMarkdown, and GitHub Markdown; Plain Text, Taskpaper, and Simple List render as plain text.
+- **Multi-Tab Workspace:** Open multiple drafts side-by-side with horizontal tab drag-to-scroll.
+- **Tags, Flagged, Location:** Tag chips, a flagged state, and optional GPS coordinates are all sent through to Drafts via the email payload.
+- **File Attachments:** Attach files to a draft before sending.
+- **Bookmarklet Ready:** Accepts URL parameters (`?text=`, `?tags=`, `?url=`, `?title=`, `?sel=`) for browser extension and bookmarklet integration.
 
 ## Architecture
 
