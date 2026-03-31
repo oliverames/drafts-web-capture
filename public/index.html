@@ -7,9 +7,9 @@
     <meta name="description" content="Capture text to Drafts app from the web">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="theme-color" content="#F0F0F2">
-    <link rel="icon" type="image/png" sizes="32x32" href="https://getdrafts.com/assets/img/custom/favicons/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="96x96" href="https://getdrafts.com/assets/img/custom/favicons/favicon-96x96.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="https://getdrafts.com/assets/img/custom/favicons/apple-touch-icon-180x180.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="img/drafts-icon.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="img/apple-touch-icon.png">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
@@ -46,7 +46,7 @@
             </div>
 
             <!-- Capture form -->
-            <div class="card capture-card" id="capture-section">
+            <div class="card capture-card" id="capture-section" style="display:none;">
 
                 <!-- Tab bar -->
                 <div class="tab-bar" id="tab-bar">
@@ -149,12 +149,12 @@
         <footer class="site-footer">
             <nav class="footer-nav">
                 <a href="https://docs.getdrafts.com/docs/extensions/maildrop" class="help-link" target="_blank" rel="noopener">Mail Drop Help</a>
-                <span class="footer-sep">·</span>
-                <button type="button" id="change-address-btn" class="btn-sign-out">Change Address</button>
+                <span class="footer-sep editor-only">·</span>
+                <button type="button" id="change-address-btn" class="btn-sign-out editor-only">Change Address</button>
                 <span class="footer-sep">·</span>
                 <a href="https://getdrafts.com" class="help-link" target="_blank" rel="noopener">Get Drafts</a>
             </nav>
-            <div class="keyboard-shortcuts">
+            <div class="keyboard-shortcuts editor-only">
                 <table>
                     <tbody>
                         <tr><td class="key">⇧⌃N</td><td class="action">New tab</td></tr>
@@ -165,7 +165,7 @@
                     </tbody>
                 </table>
             </div>
-            <p class="sign-out-hint">Clear your address after use on shared computers</p>
+            <p class="sign-out-hint editor-only">Clear your address after use on shared computers</p>
         </footer>
 
     </div>

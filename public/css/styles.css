@@ -49,7 +49,7 @@ body {
 /* ── Page layout ─────────────────────────────────────────── */
 
 .page-wrapper {
-    max-width: 860px;
+    max-width: 1100px;
     margin: 0 auto;
     padding: 0 24px 72px;
 }
@@ -136,6 +136,17 @@ body {
     background: rgba(0,0,0,0.04);
     color: var(--ink-2);
     border-color: var(--ink-5);
+}
+
+/* Two-click confirmation state */
+.btn-clear-all-tabs.btn-confirm-danger {
+    background: rgba(255,59,48,0.1);
+    color: #ff3b30;
+    border-color: rgba(255,59,48,0.3);
+}
+.btn-clear-all-tabs.btn-confirm-danger:hover {
+    background: rgba(255,59,48,0.18);
+    border-color: rgba(255,59,48,0.5);
 }
 
 /* ── Alerts ──────────────────────────────────────────────── */
@@ -245,7 +256,7 @@ body {
     overflow-x: auto;
     scrollbar-width: none;
     flex: 1;
-    padding: 0 4px;
+    padding: 0 4px 0 0;
     cursor: default;
     user-select: none;
 }
@@ -266,8 +277,10 @@ body {
     white-space: nowrap;
     border-bottom: 2px solid transparent;
     transition: color 0.1s, border-color 0.1s, background 0.1s;
-    min-width: 80px;
-    flex-shrink: 0;
+    /* Elastic: grow to fill when few tabs, compress then scroll when many */
+    flex: 1 1 0;
+    min-width: 72px;
+    max-width: 180px;
 }
 .tab-item:hover { color: var(--ink-2); background: rgba(0,0,0,0.03); }
 .tab-item.active {
@@ -360,8 +373,9 @@ body {
 .view-btn + .view-btn { border-left: 1px solid var(--divider); }
 .view-btn:hover:not(.active) { background: rgba(0,0,0,0.05); }
 .view-btn.active {
-    background: var(--blue);
-    color: #fff;
+    background: var(--blue-dim);
+    color: var(--blue);
+    font-weight: 600;
 }
 
 /* Content textarea — hero of the form */
@@ -438,6 +452,23 @@ body {
 .preview-pane hr { border: none; border-top: 1px solid var(--divider); margin: 1.2em 0; }
 .preview-pane strong { font-weight: 600; }
 .preview-pane em { font-style: italic; }
+.preview-pane table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 0.8em 0;
+    font-size: 0.92em;
+}
+.preview-pane th,
+.preview-pane td {
+    border: 1px solid var(--divider);
+    padding: 6px 12px;
+    text-align: left;
+}
+.preview-pane th {
+    background: var(--surface-2);
+    font-weight: 600;
+}
+.preview-pane tr:nth-child(even) td { background: var(--surface-2); }
 
 /* Meta bar — tags, syntax, flags, buttons */
 .form-meta-row {
@@ -892,6 +923,10 @@ body {
     vertical-align: middle;
 }
 
+/* ── Setup mode — hide editor-only elements ──────────────── */
+
+body.setup-mode .editor-only { display: none !important; }
+
 /* ── Responsive ──────────────────────────────────────────── */
 
 /* Mid-range: shrink tags max-width as space gets tighter */
@@ -909,4 +944,29 @@ body {
     .meta-right { gap: 6px; }
     .btn-sign-out { width: 100%; margin-top: 8px; }
     .footer-nav { flex-direction: column; gap: 6px; }
+}
+
+/* iPhone-width: stack meta row as two separate rows */
+@media (max-width: 480px) {
+    .form-meta-row {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+        padding: 8px 12px;
+    }
+    .meta-left {
+        overflow-x: auto;
+        scrollbar-width: none;
+        flex-wrap: nowrap;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--divider);
+    }
+    .meta-left::-webkit-scrollbar { display: none; }
+    .tags-field { flex: 0 0 auto; max-width: 150px; }
+    .meta-right {
+        display: flex;
+        justify-content: flex-end;
+        padding-top: 8px;
+        gap: 7px;
+    }
 }

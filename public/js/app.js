@@ -43,10 +43,19 @@ document.addEventListener('DOMContentLoaded', function () {
                 pos => {
                     window.__cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
                 },
-                () => {
-                    this.checked = false;
-                    saveCurrentTabContent();
-                    showAlert('Location access denied or unavailable.', 'warning');
+                err => {
+                    if (err.code === err.PERMISSION_DENIED) {
+                        // User explicitly denied — uncheck and warn
+                        this.checked = false;
+                        window.__cachedLocation = null;
+                        saveCurrentTabContent();
+                        showAlert('Location access denied.', 'warning');
+                    } else {
+                        // POSITION_UNAVAILABLE or TIMEOUT — permission likely granted but
+                        // location fix failed (common on desktop / localhost). Keep checked
+                        // so submit can retry, just inform the user.
+                        showAlert('Location permission granted but a fix couldn\u2019t be obtained. Will retry on send.', 'info');
+                    }
                 },
                 { timeout: 10000, maximumAge: 300000 }
             );
@@ -93,6 +102,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (setupSection)   setupSection.style.display   = hasAuth ? 'none' : '';
         if (captureSection) captureSection.style.display = hasAuth ? '' : 'none';
         if (headerActions)  headerActions.style.visibility = hasAuth ? '' : 'hidden';
+        document.body.classList.toggle('setup-mode', !hasAuth);
     }
 
     // ── Tabs ─────────────────────────────────────────────────
@@ -415,15 +425,27 @@ document.addEventListener('DOMContentLoaded', function () {
             if (cmRoot) cmRoot.style.display = 'none';
             else ta.style.display = 'none';
             previewEl.style.display = '';
-            const md = window.__editor ? window.__editor.getValue() : (ta.value || '');
-            if (window.marked) {
-                previewEl.textContent = '';
+            const content = window.__editor ? window.__editor.getValue() : (ta.value || '');
+            const syntax  = document.getElementById('draft-syntax')?.value || 'Markdown';
+            const isMarkdown = ['Markdown', 'MultiMarkdown', 'GitHub Markdown'].includes(syntax);
+            previewEl.textContent = '';
+            if (isMarkdown && window.marked) {
+                // GFM covers standard Markdown, MultiMarkdown tables/strikethrough,
+                // and GitHub Markdown — enabled by default in marked v9.
                 const fragment = document.createRange().createContextualFragment(
-                    window.marked.parse(md || '<em>Nothing to preview yet.</em>')
+                    window.marked.parse(content || '') || '<em style="color:var(--ink-5)">Nothing to preview yet.</em>'
                 );
+                fragment.querySelectorAll('a').forEach(a => {
+                    a.target = '_blank';
+                    a.rel = 'noopener noreferrer';
+                });
                 previewEl.appendChild(fragment);
             } else {
-                previewEl.textContent = md || 'Nothing to preview yet.';
+                // Plain Text, Taskpaper, Simple List — render as-is
+                const pre = document.createElement('pre');
+                pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:inherit;color:var(--ink);margin:0';
+                pre.textContent = content || 'Nothing to preview yet.';
+                previewEl.appendChild(pre);
             }
         });
     }
@@ -616,13 +638,12 @@ document.addEventListener('DOMContentLoaded', function () {
         div.className = 'alert ' + type;
         div.textContent = message;
         alertContainer.prepend(div);
-        if (type === 'success') {
-            setTimeout(() => {
-                div.style.transition = 'opacity 0.4s';
-                div.style.opacity    = '0';
-                setTimeout(() => div.remove(), 400);
-            }, 6000);
-        }
+        const delay = type === 'error' ? 8000 : type === 'warning' ? 6000 : 4000;
+        setTimeout(() => {
+            div.style.transition = 'opacity 0.4s';
+            div.style.opacity    = '0';
+            setTimeout(() => div.remove(), 400);
+        }, delay);
     }
 
     function showLoading() {
@@ -905,12 +926,29 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function clearAllTabs() {
-        if (!confirm('Clear all open drafts?')) return;
-        tabs = [makeTab()];
-        activeTabId = tabs[0].id;
-        saveTabs();
-        renderTabs();
-        loadTabContent(activeTabId);
+        const btn = document.getElementById('clear-all-tabs-btn');
+        if (btn && btn.dataset.confirmPending === '1') {
+            // Second click — execute clear
+            clearTimeout(btn._confirmTimer);
+            delete btn.dataset.confirmPending;
+            btn.classList.remove('btn-confirm-danger');
+            btn.textContent = 'Clear All';
+            tabs = [makeTab()];
+            activeTabId = tabs[0].id;
+            saveTabs();
+            renderTabs();
+            loadTabContent(activeTabId);
+        } else if (btn) {
+            // First click — enter confirmation state
+            btn.dataset.confirmPending = '1';
+            btn.classList.add('btn-confirm-danger');
+            btn.textContent = 'Confirm?';
+            btn._confirmTimer = setTimeout(() => {
+                delete btn.dataset.confirmPending;
+                btn.classList.remove('btn-confirm-danger');
+                btn.textContent = 'Clear All';
+            }, 3000);
+        }
     }
 
     function discardAllDrafts() {

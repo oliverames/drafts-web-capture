@@ -16,7 +16,7 @@ export default {
 
     try {
       const data = await request.json();
-      const { email, content, tags, syntax, flagged, latitude, longitude, attachments } = data;
+      const { email, content, tags, flagged, latitude, longitude, attachments } = data;
 
       if (!email || !content) {
         return new Response(JSON.stringify({ error: 'Missing email or content' }), {
@@ -26,7 +26,7 @@ export default {
       }
 
       const lines = content.trim().split('\n');
-      let subject = lines[0].substring(0, 150);
+      let subject = lines[0].replace(/^#+\s*/, '').trim().substring(0, 150);
       let body = lines.slice(1).join('\n');
 
       if (tags) {
@@ -37,16 +37,10 @@ export default {
         }
       }
 
-      // Drafts Mail Drop doesn't natively parse syntax, flags, or location,
-      // but we append them to the body so they aren't lost (actions can parse them).
       const meta = [];
-      if (syntax && syntax !== 'Plain Text') meta.push('Syntax: ' + syntax);
-      if (flagged) meta.push('Flagged: yes');
-      if (latitude && longitude) meta.push('Location: ' + latitude + ', ' + longitude);
-
-      if (meta.length > 0) {
-          body += '\n\n---\n' + meta.join('\n');
-      }
+      if (flagged) meta.push('🚩 Flagged');
+      if (latitude && longitude) meta.push('📍 ' + latitude + ', ' + longitude);
+      if (meta.length > 0) body += '\n\n---\n' + meta.join('\n');
 
       const emailPayload = {
         from: 'Capture <capture@drafts.amesvt.com>',
