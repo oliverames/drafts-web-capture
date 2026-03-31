@@ -165,6 +165,22 @@ body {
     text-align: center;
 }
 
+.sign-in-icon {
+    margin: 0 auto 20px;
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.sign-in-icon img {
+    width: 56px;
+    height: 56px;
+    border-radius: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08);
+}
+
 .sign-in-title {
     font-size: 1.35rem;
     font-weight: 600;
@@ -251,7 +267,8 @@ body {
     color: var(--ink);
     font-weight: 600;
     border-bottom-color: var(--blue);
-    background: rgba(23,57,115,0.04);
+    background: var(--surface);
+    box-shadow: inset 0 1px 0 rgba(23,57,115,0.18);
 }
 
 /* Fade indicator for tabs with local-only content */
