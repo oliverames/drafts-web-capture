@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', function () {
     let draftQueue  = [];
     let saveTimer   = null;
     let attachedFiles = [];
+    let clearAllConfirmTimer = null;
 
     // ── DOM refs ──────────────────────────────────────────────
     const captureForm    = document.getElementById('capture-form');
@@ -45,15 +46,11 @@ document.addEventListener('DOMContentLoaded', function () {
                 },
                 err => {
                     if (err.code === err.PERMISSION_DENIED) {
-                        // User explicitly denied — uncheck and warn
                         this.checked = false;
                         window.__cachedLocation = null;
-                        saveCurrentTabContent();
                         showAlert('Location access denied.', 'warning');
                     } else {
-                        // POSITION_UNAVAILABLE or TIMEOUT — permission likely granted but
-                        // location fix failed (common on desktop / localhost). Keep checked
-                        // so submit can retry, just inform the user.
+                        // POSITION_UNAVAILABLE or TIMEOUT — granted but no fix (common on desktop/localhost)
                         showAlert('Location permission granted but a fix couldn\u2019t be obtained. Will retry on send.', 'info');
                     }
                 },
@@ -429,11 +426,14 @@ document.addEventListener('DOMContentLoaded', function () {
             const syntax  = document.getElementById('draft-syntax')?.value || 'Markdown';
             const isMarkdown = ['Markdown', 'MultiMarkdown', 'GitHub Markdown'].includes(syntax);
             previewEl.textContent = '';
-            if (isMarkdown && window.marked) {
-                // GFM covers standard Markdown, MultiMarkdown tables/strikethrough,
-                // and GitHub Markdown — enabled by default in marked v9.
+            if (!content.trim()) {
+                const em = document.createElement('em');
+                em.className = 'preview-empty';
+                em.textContent = 'Nothing to preview yet.';
+                previewEl.appendChild(em);
+            } else if (isMarkdown && window.marked) {
                 const fragment = document.createRange().createContextualFragment(
-                    window.marked.parse(content || '') || '<em style="color:var(--ink-5)">Nothing to preview yet.</em>'
+                    window.marked.parse(content)
                 );
                 fragment.querySelectorAll('a').forEach(a => {
                     a.target = '_blank';
@@ -441,10 +441,9 @@ document.addEventListener('DOMContentLoaded', function () {
                 });
                 previewEl.appendChild(fragment);
             } else {
-                // Plain Text, Taskpaper, Simple List — render as-is
                 const pre = document.createElement('pre');
-                pre.style.cssText = 'white-space:pre-wrap;word-break:break-word;font-family:inherit;font-size:inherit;color:var(--ink);margin:0';
-                pre.textContent = content || 'Nothing to preview yet.';
+                pre.className = 'preview-plain';
+                pre.textContent = content;
                 previewEl.appendChild(pre);
             }
         });
@@ -928,8 +927,8 @@ document.addEventListener('DOMContentLoaded', function () {
     function clearAllTabs() {
         const btn = document.getElementById('clear-all-tabs-btn');
         if (btn && btn.dataset.confirmPending === '1') {
-            // Second click — execute clear
-            clearTimeout(btn._confirmTimer);
+            clearTimeout(clearAllConfirmTimer);
+            clearAllConfirmTimer = null;
             delete btn.dataset.confirmPending;
             btn.classList.remove('btn-confirm-danger');
             btn.textContent = 'Clear All';
@@ -939,11 +938,11 @@ document.addEventListener('DOMContentLoaded', function () {
             renderTabs();
             loadTabContent(activeTabId);
         } else if (btn) {
-            // First click — enter confirmation state
             btn.dataset.confirmPending = '1';
             btn.classList.add('btn-confirm-danger');
             btn.textContent = 'Confirm?';
-            btn._confirmTimer = setTimeout(() => {
+            clearAllConfirmTimer = setTimeout(() => {
+                clearAllConfirmTimer = null;
                 delete btn.dataset.confirmPending;
                 btn.classList.remove('btn-confirm-danger');
                 btn.textContent = 'Clear All';
