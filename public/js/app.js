@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', function () {
     setupTagInput();
     setupTabDragScroll();
     setupAttachments();
+    setupFormatBar();
+    // After CM mounts (editor.js is a module, deferred) fit the editor height
+    setTimeout(fitEditorToViewport, 250);
 
     if (captureForm) captureForm.addEventListener('submit', handleFormSubmit);
     document.getElementById('clear-btn')?.addEventListener('click', clearForm);
@@ -115,6 +118,7 @@ document.addEventListener('DOMContentLoaded', function () {
         if (captureSection) captureSection.style.display = hasAuth ? '' : 'none';
         if (headerActions)  headerActions.style.visibility = hasAuth ? '' : 'hidden';
         document.body.classList.toggle('setup-mode', !hasAuth);
+        if (hasAuth) setTimeout(fitEditorToViewport, 50);
     }
 
     // ── Tabs ─────────────────────────────────────────────────
@@ -180,6 +184,7 @@ document.addEventListener('DOMContentLoaded', function () {
         window.__resizeTextarea?.();
         if (window.__editor) window.__editor.setValue(tab.content);
         showWriteMode();
+        renderFormatButtons(tab.syntax);
     }
 
     function renderTabs() {
@@ -410,11 +415,13 @@ document.addEventListener('DOMContentLoaded', function () {
         const cmRoot = document.getElementById('cm-editor-root');
         const wb     = document.getElementById('view-write');
         const pb     = document.getElementById('view-preview');
+        const fmtBar = document.getElementById('format-bar');
         if (cmRoot) cmRoot.style.display = '';
         else if (ta) ta.style.display = '';
         if (pre) { pre.style.display = 'none'; pre.style.minHeight = ''; }
         wb?.classList.add('active');
         pb?.classList.remove('active');
+        fmtBar?.classList.remove('preview-mode');
     }
 
     function setupEditorToggle() {
@@ -429,13 +436,14 @@ document.addEventListener('DOMContentLoaded', function () {
         previewBtn.addEventListener('click', () => {
             previewBtn.classList.add('active');
             writeBtn.classList.remove('active');
-            const cmRoot = document.getElementById('cm-editor-root');
-            // Lock preview to current editor height so switching doesn't resize the card
+            const cmRoot  = document.getElementById('cm-editor-root');
+            const fmtBar  = document.getElementById('format-bar');
             const editorEl = cmRoot || ta;
             previewEl.style.minHeight = editorEl.offsetHeight + 'px';
             if (cmRoot) cmRoot.style.display = 'none';
             else ta.style.display = 'none';
             previewEl.style.display = '';
+            fmtBar?.classList.add('preview-mode');
             const content = window.__editor ? window.__editor.getValue() : (ta.value || '');
             const syntax  = document.getElementById('draft-syntax')?.value || 'Markdown';
             const isMarkdown = ['Markdown', 'MultiMarkdown', 'GitHub Markdown'].includes(syntax);
@@ -462,6 +470,179 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     }
+
+    // ── Format bar ────────────────────────────────────────────
+
+    function setupFormatBar() {
+        const syntaxSel = document.getElementById('draft-syntax');
+        if (!syntaxSel) return;
+        syntaxSel.addEventListener('change', () => renderFormatButtons(syntaxSel.value));
+        renderFormatButtons(syntaxSel.value);
+        // Close any open more-menu when clicking elsewhere (registered once)
+        document.addEventListener('click', () => {
+            document.querySelector('.fmt-more-menu.open')?.classList.remove('open');
+        });
+    }
+
+    function applyFormat(op, before, after, ph) {
+        if (!window.__editor) return;
+        if (op === 'inline') {
+            window.__editor.insertFormat(before, after, ph || '');
+        } else if (op === 'line') {
+            window.__editor.insertLineFormat(before);
+        } else if (op === 'insert') {
+            window.__editor.insertFormat('', '', before);
+        } else if (op === 'link') {
+            window.__editor.insertLinkFormat();
+        } else if (op === 'heading') {
+            window.__editor.cycleHeading();
+        } else if (op === 'codeblock') {
+            window.__editor.insertFormat('```\n', '\n```', 'code here');
+        } else if (op === 'table') {
+            window.__editor.insertFormat('', '', '| Column 1 | Column 2 |\n| --- | --- |\n| Cell | Cell |');
+        }
+        window.__editor.focus();
+    }
+
+    function makeFormatBtn(cfg) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'fmt-btn';
+        btn.title = cfg.title || '';
+        if (cfg.labelEl) {
+            btn.appendChild(cfg.labelEl());
+        } else {
+            btn.textContent = cfg.label;
+        }
+        btn.addEventListener('click', () => applyFormat(cfg.op, cfg.before, cfg.after, cfg.ph));
+        return btn;
+    }
+
+    function renderFormatButtons(syntax) {
+        const container = document.getElementById('fmt-btns');
+        if (!container) return;
+        while (container.firstChild) container.removeChild(container.firstChild);
+
+        const sep = () => { const s = document.createElement('div'); s.className = 'fmt-sep'; return s; };
+        const mkEl = (tag, text) => { const e = document.createElement(tag); e.textContent = text; return e; };
+
+        const mdPrimary = [
+            { labelEl: () => mkEl('b', 'B'),   label: 'B',    title: 'Bold',          op: 'inline', before: '**', after: '**',  ph: 'bold text' },
+            { labelEl: () => mkEl('i', 'I'),    label: 'I',    title: 'Italic',        op: 'inline', before: '_',  after: '_',   ph: 'italic text' },
+            { labelEl: () => mkEl('s', 'S'),    label: 'S',    title: 'Strikethrough', op: 'inline', before: '~~', after: '~~',  ph: 'text' },
+            { labelEl: () => mkEl('code', '`'), label: '`',    title: 'Inline code',   op: 'inline', before: '`',  after: '`',   ph: 'code' },
+        ];
+        const mdLine = [
+            { label: '#',     title: 'Heading',     op: 'heading' },
+            { label: '\u201c', title: 'Blockquote',  op: 'line',   before: '> ' },
+            { label: '\u2022', title: 'Bullet list', op: 'line',   before: '- ' },
+        ];
+        const mdMore = [
+            { label: '1.',      title: 'Ordered list', op: 'line',   before: '1. ' },
+            { label: '\u2015',  title: 'Divider (HR)',  op: 'insert', before: '\n---\n' },
+            { label: 'Link',    title: 'Link',           op: 'link' },
+            { label: 'Image',   title: 'Image',          op: 'inline', before: '![', after: '](url)', ph: 'alt text' },
+        ];
+        const ghExtra = [
+            { label: '\u2610',  title: 'Task item',  op: 'line',  before: '- [ ] ' },
+            { label: '```',     title: 'Code block', op: 'codeblock' },
+            { label: 'Table',   title: 'Table',      op: 'table' },
+        ];
+
+        if (['Markdown', 'MultiMarkdown', 'GitHub Markdown'].includes(syntax)) {
+            mdPrimary.forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
+            container.appendChild(sep());
+            mdLine.forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
+
+            const moreItems = syntax === 'GitHub Markdown' ? [...mdMore, ...ghExtra] : mdMore;
+
+            const moreWrap = document.createElement('div');
+            moreWrap.className = 'fmt-more-wrap';
+
+            const moreBtn = document.createElement('button');
+            moreBtn.type = 'button';
+            moreBtn.className = 'fmt-more-btn';
+            const moreLbl = document.createElement('span');
+            moreLbl.className = 'fmt-more-label';
+            moreLbl.textContent = 'More';
+            moreBtn.appendChild(moreLbl);
+            moreBtn.appendChild(document.createTextNode(' \u25be'));
+
+            const moreMenu = document.createElement('div');
+            moreMenu.className = 'fmt-more-menu';
+
+            moreItems.forEach(cfg => {
+                const item = document.createElement('button');
+                item.type = 'button';
+                item.className = 'fmt-more-item';
+                const keySpan = document.createElement('span');
+                keySpan.className = 'fmt-more-key';
+                keySpan.textContent = cfg.label;
+                const lblSpan = document.createElement('span');
+                lblSpan.textContent = cfg.title;
+                item.appendChild(keySpan);
+                item.appendChild(lblSpan);
+                item.addEventListener('click', () => {
+                    moreMenu.classList.remove('open');
+                    applyFormat(cfg.op, cfg.before, cfg.after, cfg.ph);
+                });
+                moreMenu.appendChild(item);
+            });
+
+            moreBtn.addEventListener('click', e => {
+                e.stopPropagation();
+                moreMenu.classList.toggle('open');
+            });
+
+            moreWrap.appendChild(moreBtn);
+            moreWrap.appendChild(moreMenu);
+            container.appendChild(sep());
+            container.appendChild(moreWrap);
+
+        } else if (syntax === 'Taskpaper') {
+            [
+                { label: '@tag',   title: 'Tag',      op: 'inline', before: '@',     after: '()', ph: 'value' },
+                { label: '@done',  title: 'Done',      op: 'insert', before: ' @done' },
+                { label: '@due',   title: 'Due date',  op: 'inline', before: '@due(', after: ')', ph: 'YYYY-MM-DD' },
+                { label: '@today', title: 'Today',     op: 'insert', before: ' @today' },
+            ].forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
+
+        } else if (syntax === 'Simple List') {
+            [
+                { label: '\u2022', title: 'Bullet',   op: 'line', before: '- ' },
+                { label: '\u2610', title: 'Checkbox',  op: 'line', before: '- [ ] ' },
+            ].forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
+        }
+
+    }
+
+    // ── Desktop editor height ─────────────────────────────────
+
+    function fitEditorToViewport() {
+        if (window.innerWidth < 900) {
+            document.documentElement.style.removeProperty('--editor-min-h');
+            return;
+        }
+        const capture = document.getElementById('capture-section');
+        if (!capture || capture.style.display === 'none') return;
+
+        const cmRoot = document.getElementById('cm-editor-root');
+        const footer = document.querySelector('.site-footer');
+        if (!cmRoot || !footer) return;
+
+        const cmRect     = cmRoot.getBoundingClientRect();
+        const footerRect = footer.getBoundingClientRect();
+        // belowH is everything between editor bottom and footer bottom — constant regardless of editor height
+        const belowH  = footerRect.bottom - cmRect.bottom;
+        const newMinH = Math.max(200, Math.floor(window.innerHeight - cmRect.top - belowH));
+        document.documentElement.style.setProperty('--editor-min-h', newMinH + 'px');
+    }
+
+    let _fitTimer = null;
+    window.addEventListener('resize', () => {
+        clearTimeout(_fitTimer);
+        _fitTimer = setTimeout(fitEditorToViewport, 80);
+    });
 
     // ── Attachments ───────────────────────────────────────────
 
@@ -619,22 +800,22 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Keyboard shortcuts ────────────────────────────────────
 
     document.addEventListener('keydown', e => {
-        if (e.shiftKey && e.ctrlKey && e.key.toLowerCase() === 'n') {
+        if (e.shiftKey && e.metaKey && e.key.toLowerCase() === 'n') {
             e.preventDefault();
             newTab();
             return;
         }
 
-        if (e.shiftKey && e.ctrlKey && (e.key === 'Enter' || e.key === 'Return')) {
+        if (e.shiftKey && e.metaKey && (e.key === 'Enter' || e.key === 'Return')) {
             e.preventDefault();
             captureForm?.dispatchEvent(new Event('submit', { cancelable: true }));
-        } else if (e.shiftKey && e.ctrlKey && e.key.toLowerCase() === 'b') {
+        } else if (e.shiftKey && e.metaKey && e.key.toLowerCase() === 'b') {
             e.preventDefault();
             focusEditor();
-        } else if (e.shiftKey && e.ctrlKey && e.key.toLowerCase() === 't') {
+        } else if (e.shiftKey && e.metaKey && e.key.toLowerCase() === 't') {
             e.preventDefault();
             document.getElementById('tags-input')?.focus();
-        } else if (e.shiftKey && e.ctrlKey && e.key.toLowerCase() === 'l') {
+        } else if (e.shiftKey && e.metaKey && e.key.toLowerCase() === 'l') {
             e.preventDefault();
             const f = document.getElementById('draft-flagged');
             if (f) f.checked = !f.checked;

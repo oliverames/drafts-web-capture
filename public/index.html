@@ -51,18 +51,12 @@
                 <!-- Tab bar -->
                 <div class="tab-bar" id="tab-bar">
                     <div class="tab-scroll" id="tab-scroll"></div>
-                    <button type="button" class="tab-new-btn" id="tab-new-btn" title="New draft (⇧⌃N)">+</button>
+                    <button type="button" class="tab-new-btn" id="tab-new-btn" title="New draft (⇧⌘N)">+</button>
                 </div>
 
                 <form id="capture-form" autocomplete="off">
 
                     <div class="content-field">
-                        <div class="editor-header">
-                            <div class="editor-toggle" role="group" aria-label="Editor view">
-                                <button type="button" class="view-btn active" id="view-write">Write</button>
-                                <button type="button" class="view-btn" id="view-preview">Preview</button>
-                            </div>
-                        </div>
                         <textarea
                             id="draft-content"
                             name="content"
@@ -73,30 +67,31 @@
                         <div id="preview-pane" class="preview-pane" style="display:none;"></div>
                     </div>
 
+                    <!-- Formatting syntax bar -->
+                    <div class="format-bar" id="format-bar">
+                        <div class="format-bar-left">
+                            <select id="draft-syntax" name="syntax" title="Syntax mode">
+                                <option value="Plain Text">Plain Text</option>
+                                <option value="Markdown" selected>Markdown</option>
+                                <option value="MultiMarkdown">MultiMarkdown</option>
+                                <option value="GitHub Markdown">GitHub Markdown</option>
+                                <option value="Taskpaper">Taskpaper</option>
+                                <option value="Simple List">Simple List</option>
+                            </select>
+                        </div>
+                        <div class="format-bar-mid">
+                            <div class="fmt-btns" id="fmt-btns"></div>
+                        </div>
+                        <div class="format-bar-right">
+                            <div class="editor-toggle" role="group" aria-label="Editor view">
+                                <button type="button" class="view-btn active" id="view-write">Write</button>
+                                <button type="button" class="view-btn" id="view-preview">Preview</button>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-meta-row">
                         <div class="meta-left">
-                            <!-- Tag chip input -->
-                            <div class="meta-field tags-field">
-                                <svg class="meta-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                                    <path d="M2 4a2 2 0 012-2h4.586a1 1 0 01.707.293l5.414 5.414a1 1 0 010 1.414l-4.586 4.586a1 1 0 01-1.414 0L3.293 8.293A1 1 0 013 7.586V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
-                                    <circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
-                                </svg>
-                                <div class="tags-area" id="tags-area">
-                                    <!-- chips injected by JS -->
-                                    <input type="text" id="tags-input" placeholder="Add tag…" spellcheck="false" autocomplete="off">
-                                </div>
-                                <input type="hidden" id="draft-tags" name="tags">
-                            </div>
-                            <div class="meta-field syntax-field">
-                                <select id="draft-syntax" name="syntax">
-                                    <option value="Plain Text">Plain Text</option>
-                                    <option value="Markdown" selected>Markdown</option>
-                                    <option value="MultiMarkdown">MultiMarkdown</option>
-                                    <option value="GitHub Markdown">GitHub Markdown</option>
-                                    <option value="Taskpaper">Taskpaper</option>
-                                    <option value="Simple List">Simple List</option>
-                                </select>
-                            </div>
                             <label class="meta-field flagged-field no-divider" title="Flag this draft">
                                 <input type="checkbox" id="draft-flagged" name="flagged">
                                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
@@ -112,16 +107,28 @@
                                 </svg>
                                 <span>Location</span>
                             </label>
+                            <!-- Tag chip input -->
+                            <div class="meta-field tags-field">
+                                <svg class="meta-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M2 4a2 2 0 012-2h4.586a1 1 0 01.707.293l5.414 5.414a1 1 0 010 1.414l-4.586 4.586a1 1 0 01-1.414 0L3.293 8.293A1 1 0 013 7.586V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                    <circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
+                                </svg>
+                                <div class="tags-area" id="tags-area">
+                                    <!-- chips injected by JS -->
+                                    <input type="text" id="tags-input" placeholder="Add tag…" spellcheck="false" autocomplete="off">
+                                </div>
+                                <input type="hidden" id="draft-tags" name="tags">
+                            </div>
+                        </div>
+                        <div class="meta-right">
                             <!-- Attachment button -->
-                            <label class="meta-field attach-field no-divider" title="Attach file">
+                            <label class="meta-field attach-field" title="Attach file">
                                 <input type="file" id="draft-attachments" name="attachments" multiple style="position:absolute;opacity:0;pointer-events:none;width:0;height:0;">
                                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                     <path d="M13.5 7.5l-6 6a3.5 3.5 0 01-4.95-4.95l6-6a2 2 0 012.83 2.83l-5.5 5.5a.5.5 0 01-.71-.71l5-5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
                                 </svg>
                                 <span id="attach-label">Attach</span>
                             </label>
-                        </div>
-                        <div class="meta-right">
                             <button type="button" id="clear-btn" class="btn-clear">Clear</button>
                             <button type="submit" class="btn-create">
                                 <span class="btn-create-label">Create</span>
@@ -157,11 +164,11 @@
             <div class="keyboard-shortcuts editor-only">
                 <table>
                     <tbody>
-                        <tr><td class="key">⇧⌃N</td><td class="action">New tab</td></tr>
-                        <tr><td class="key">⇧⌃↩</td><td class="action">Create Draft</td></tr>
-                        <tr><td class="key">⇧⌃B</td><td class="action">Edit content</td></tr>
-                        <tr><td class="key">⇧⌃T</td><td class="action">Edit tags</td></tr>
-                        <tr><td class="key">⇧⌃L</td><td class="action">Toggle flagged</td></tr>
+                        <tr><td class="key">⇧⌘N</td><td class="action">New tab</td></tr>
+                        <tr><td class="key">⇧⌘↩</td><td class="action">Create Draft</td></tr>
+                        <tr><td class="key">⇧⌘B</td><td class="action">Edit content</td></tr>
+                        <tr><td class="key">⇧⌘T</td><td class="action">Edit tags</td></tr>
+                        <tr><td class="key">⇧⌘L</td><td class="action">Toggle flagged</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -192,5 +199,18 @@
     <!-- Pretext: accurate textarea auto-sizing without DOM reflow -->
     <script type="module" src="js/textarea-resize.js"></script>
     <script type="module" src="js/editor.js"></script>
+
+    <!-- Floating selection toolbar (shown by editor.js when text is selected) -->
+    <div id="selection-toolbar" class="selection-toolbar" role="toolbar" aria-label="Formatting">
+        <button class="sel-btn" data-op="inline" data-before="**" data-after="**" data-ph="bold text" title="Bold"><b>B</b></button>
+        <button class="sel-btn" data-op="inline" data-before="_" data-after="_" data-ph="italic text" title="Italic"><i>I</i></button>
+        <button class="sel-btn sel-strike" data-op="inline" data-before="~~" data-after="~~" data-ph="text" title="Strikethrough"><s>S</s></button>
+        <button class="sel-btn sel-code" data-op="inline" data-before="`" data-after="`" data-ph="code" title="Inline code">&lt;/&gt;</button>
+        <div class="sel-sep"></div>
+        <button class="sel-btn" data-op="link" title="Link">
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="M6.5 9.5a4 4 0 005.66 0l2-2a4 4 0 00-5.66-5.66L7.44 2.9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M9.5 6.5a4 4 0 00-5.66 0l-2 2a4 4 0 005.66 5.66l1.06-1.06" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+            Link
+        </button>
+    </div>
 </body>
 </html>
