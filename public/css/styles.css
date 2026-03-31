@@ -49,9 +49,9 @@ body {
 /* ── Page layout ─────────────────────────────────────────── */
 
 .page-wrapper {
-    max-width: 680px;
+    max-width: 860px;
     margin: 0 auto;
-    padding: 0 20px 72px;
+    padding: 0 24px 72px;
 }
 
 /* ── Header ──────────────────────────────────────────────── */
@@ -127,8 +127,8 @@ body {
 }
 
 .btn-clear-all-tabs {
-    background: transparent;
-    color: var(--ink-4);
+    background: var(--surface-2);
+    color: var(--ink-3);
     border: 1px solid var(--divider);
     box-shadow: none;
 }
@@ -348,9 +348,9 @@ body {
 }
 
 .view-btn {
-    background: transparent;
+    background: var(--surface-2);
     border: none;
-    color: var(--ink-4);
+    color: var(--ink-3);
     padding: 3px 10px;
     font-size: 0.75rem;
     font-family: inherit;
@@ -358,6 +358,7 @@ body {
     transition: background 0.1s, color 0.1s;
 }
 .view-btn + .view-btn { border-left: 1px solid var(--divider); }
+.view-btn:hover:not(.active) { background: rgba(0,0,0,0.05); }
 .view-btn.active {
     background: var(--blue);
     color: #fff;
@@ -501,17 +502,32 @@ body {
     max-width: 200px;
     gap: 3px;
     overflow: hidden;
+    position: relative;
+}
+
+/* Fade-right affordance when chips are present */
+.tags-field.has-tags::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 18px;
+    background: linear-gradient(to right, transparent, var(--surface-2));
+    pointer-events: none;
 }
 
 .tags-area {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    overflow: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
     gap: 3px;
     flex: 1;
     min-width: 0;
 }
+.tags-area::-webkit-scrollbar { display: none; }
 
 #tags-input {
     flex: 1;
@@ -621,9 +637,9 @@ body {
 
 /* Action buttons */
 .btn-clear {
-    background: transparent;
+    background: var(--surface-2);
     border: 1px solid var(--divider);
-    color: var(--ink-4);
+    color: var(--ink-3);
     padding: 6px 14px;
     border-radius: var(--radius-sm);
     font-size: 0.78rem;

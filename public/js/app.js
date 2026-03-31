@@ -36,6 +36,26 @@ document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
     document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
 
+    // Request location immediately on checkbox check (triggers permission dialog, caches result)
+    document.getElementById('draft-location')?.addEventListener('change', function () {
+        if (this.checked && navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+                pos => {
+                    window.__cachedLocation = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+                },
+                () => {
+                    this.checked = false;
+                    saveCurrentTabContent();
+                    showAlert('Location access denied or unavailable.', 'warning');
+                },
+                { timeout: 10000, maximumAge: 300000 }
+            );
+        } else {
+            window.__cachedLocation = null;
+        }
+        saveCurrentTabContent();
+    });
+
     document.getElementById('save-maildrop-btn')?.addEventListener('click', () => {
         const input = document.getElementById('maildrop-input');
         if (input.value.includes('@drafts.io') || input.value.includes('@maildrop.getdrafts.com')) {
@@ -291,6 +311,8 @@ document.addEventListener('DOMContentLoaded', function () {
         const input = document.getElementById('tags-input');
         if (!area || !input) return;
         area.querySelectorAll('.tag-chip').forEach(el => el.remove());
+        // Fade-right affordance when chips present
+        area.closest('.tags-field')?.classList.toggle('has-tags', tagList.length > 0);
         tagList.forEach((tag, i) => {
             const chip = document.createElement('span');
             chip.className = 'tag-chip';
@@ -365,7 +387,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const pb     = document.getElementById('view-preview');
         if (cmRoot) cmRoot.style.display = '';
         else if (ta) ta.style.display = '';
-        if (pre) pre.style.display = 'none';
+        if (pre) { pre.style.display = 'none'; pre.style.minHeight = ''; }
         wb?.classList.add('active');
         pb?.classList.remove('active');
     }
@@ -383,6 +405,9 @@ document.addEventListener('DOMContentLoaded', function () {
             previewBtn.classList.add('active');
             writeBtn.classList.remove('active');
             const cmRoot = document.getElementById('cm-editor-root');
+            // Lock preview to current editor height so switching doesn't resize the card
+            const editorEl = cmRoot || ta;
+            previewEl.style.minHeight = editorEl.offsetHeight + 'px';
             if (cmRoot) cmRoot.style.display = 'none';
             else ta.style.display = 'none';
             previewEl.style.display = '';
@@ -478,14 +503,19 @@ document.addEventListener('DOMContentLoaded', function () {
         savePreferences();
 
         let latitude = 0.0, longitude = 0.0;
-        if (useLocation && navigator.geolocation) {
-            try {
-                const pos = await new Promise((resolve, reject) =>
-                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
-                );
-                latitude  = pos.coords.latitude;
-                longitude = pos.coords.longitude;
-            } catch { /* proceed without location */ }
+        if (useLocation) {
+            if (window.__cachedLocation) {
+                latitude  = window.__cachedLocation.lat;
+                longitude = window.__cachedLocation.lng;
+            } else if (navigator.geolocation) {
+                try {
+                    const pos = await new Promise((resolve, reject) =>
+                        navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+                    );
+                    latitude  = pos.coords.latitude;
+                    longitude = pos.coords.longitude;
+                } catch { /* proceed without location */ }
+            }
         }
 
         let attachments = [];
