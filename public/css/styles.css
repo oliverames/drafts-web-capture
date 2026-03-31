@@ -452,6 +452,15 @@ body {
 .preview-pane hr { border: none; border-top: 1px solid var(--divider); margin: 1.2em 0; }
 .preview-pane strong { font-weight: 600; }
 .preview-pane em { font-style: italic; }
+.preview-empty { color: var(--ink-5); }
+.preview-plain {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: inherit;
+    font-size: inherit;
+    color: var(--ink);
+    margin: 0;
+}
 .preview-pane table {
     border-collapse: collapse;
     width: 100%;
