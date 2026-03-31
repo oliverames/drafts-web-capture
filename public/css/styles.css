@@ -116,8 +116,15 @@ body {
     transition: background 0.12s;
     box-shadow: 0 1px 3px rgba(23,57,115,.25);
 }
-.btn-send-all:hover,
-.btn-clear-all-tabs:hover { background: var(--blue-hover); }
+.btn-send-all:hover:not(:disabled),
+.btn-clear-all-tabs:hover:not(:disabled) { background: var(--blue-hover); }
+
+.btn-send-all:disabled,
+.btn-clear-all-tabs:disabled {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
 
 .btn-clear-all-tabs {
     background: transparent;
@@ -125,7 +132,7 @@ body {
     border: 1px solid var(--divider);
     box-shadow: none;
 }
-.btn-clear-all-tabs:hover {
+.btn-clear-all-tabs:hover:not(:disabled) {
     background: rgba(0,0,0,0.04);
     color: var(--ink-2);
     border-color: var(--ink-5);
@@ -267,8 +274,6 @@ body {
     color: var(--ink);
     font-weight: 600;
     border-bottom-color: var(--blue);
-    background: var(--surface);
-    box-shadow: inset 0 1px 0 rgba(23,57,115,0.18);
 }
 
 /* Fade indicator for tabs with local-only content */
@@ -448,7 +453,7 @@ body {
     display: flex;
     align-items: center;
     gap: 4px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex: 1;
     min-width: 0;
 }
@@ -491,17 +496,18 @@ body {
 
 /* Tags chip area */
 .tags-field {
-    flex: 1 1 auto;
+    flex: 1 1 0;
     min-width: 60px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    max-width: 200px;
     gap: 3px;
+    overflow: hidden;
 }
 
 .tags-area {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
     gap: 3px;
     flex: 1;
     min-width: 0;

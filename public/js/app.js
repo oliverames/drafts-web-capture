@@ -148,10 +148,10 @@ document.addEventListener('DOMContentLoaded', function () {
         const hasEmail = !!localStorage.getItem('mailDropAddress');
 
         if (sendAllBtn) {
-            sendAllBtn.style.display = contentfulTabs.length > 1 ? '' : 'none';
+            sendAllBtn.disabled = !(contentfulTabs.length > 1 && hasEmail);
         }
         if (clearAllBtn) {
-            clearAllBtn.style.display = tabs.length > 1 ? '' : 'none';
+            clearAllBtn.disabled = tabs.length <= 1;
         }
 
         tabs.forEach(tab => {
@@ -553,8 +553,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Keyboard shortcuts ────────────────────────────────────
 
     document.addEventListener('keydown', e => {
-        // Cmd+N (Mac) or Ctrl+N (Win/Linux) → new tab
-        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
+        if (e.shiftKey && e.ctrlKey && e.key.toLowerCase() === 'n') {
             e.preventDefault();
             newTab();
             return;

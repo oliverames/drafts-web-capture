@@ -23,9 +23,8 @@
                 <span class="logo-suffix">Capture</span>
             </a>
             <div class="header-actions">
-                <button type="button" id="clear-all-tabs-btn" class="btn-clear-all-tabs" style="display:none;" onclick="window.clearAllTabs?.()">Clear All</button>
-                <button type="button" id="send-all-btn" class="btn-send-all" style="display:none;" onclick="window.submitAllDrafts?.()">Send All</button>
-                <a href="https://getdrafts.com" class="get-drafts-link" target="_blank" rel="noopener">Get Drafts &#x2192;</a>
+                <button type="button" id="clear-all-tabs-btn" class="btn-clear-all-tabs" disabled onclick="window.clearAllTabs?.()">Clear All</button>
+                <button type="button" id="send-all-btn" class="btn-send-all" disabled onclick="window.submitAllDrafts?.()">Send All</button>
             </div>
         </header>
 
@@ -152,11 +151,13 @@
                 <a href="https://docs.getdrafts.com/docs/extensions/maildrop" class="help-link" target="_blank" rel="noopener">Mail Drop Help</a>
                 <span class="footer-sep">·</span>
                 <button type="button" id="change-address-btn" class="btn-sign-out">Change Address</button>
+                <span class="footer-sep">·</span>
+                <a href="https://getdrafts.com" class="help-link" target="_blank" rel="noopener">Get Drafts &#x2192;</a>
             </nav>
             <div class="keyboard-shortcuts">
                 <table>
                     <tbody>
-                        <tr><td class="key">⌘N / Ctrl+N</td><td class="action">New tab</td></tr>
+                        <tr><td class="key">⇧⌃N</td><td class="action">New tab</td></tr>
                         <tr><td class="key">⇧⌃↩</td><td class="action">Create Draft</td></tr>
                         <tr><td class="key">⇧⌃B</td><td class="action">Edit content</td></tr>
                         <tr><td class="key">⇧⌃T</td><td class="action">Edit tags</td></tr>
