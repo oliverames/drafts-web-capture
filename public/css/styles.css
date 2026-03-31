@@ -917,6 +917,19 @@ body {
     line-height: 1.4;
 }
 
+.unofficial-note {
+    font-size: 0.72rem;
+    color: var(--ink-5);
+    margin-top: 16px;
+    line-height: 1.4;
+}
+
+.unofficial-note a {
+    color: var(--ink-4);
+    text-decoration: underline;
+    text-decoration-color: var(--divider);
+}
+
 /* ── Loading spinner ─────────────────────────────────────── */
 
 @keyframes spin { to { transform: rotate(360deg); } }
