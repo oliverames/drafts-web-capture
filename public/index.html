@@ -6,10 +6,11 @@
     <title>Drafts Capture</title>
     <meta name="description" content="Capture text to Drafts app from the web">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#e8e8e8">
+    <meta name="theme-color" content="#F0F0F2">
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
+
     <div class="page-wrapper">
 
         <header class="site-header">
@@ -29,60 +30,85 @@
         <main>
             <div id="alert-container"></div>
 
-            <!-- Sign-in card (shown until CloudKit authenticates) -->
+            <!-- Sign-in card -->
             <div id="sign-in-section" class="card sign-in-card" style="display: none;">
-                <p>Sign in with your Apple ID to sync drafts directly to your Drafts library.</p>
+                <div class="sign-in-icon" aria-hidden="true">
+                    <svg width="40" height="40" viewBox="0 0 22 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="1.5" y="1.5" width="19" height="19" rx="4.5" stroke="#4A90D9" stroke-width="1.5"/>
+                        <line x1="5" y1="7"  x2="17" y2="7"  stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="5" y1="11" x2="17" y2="11" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/>
+                        <line x1="5" y1="15" x2="12" y2="15" stroke="#4A90D9" stroke-width="1.5" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <h1 class="sign-in-title">Drafts Capture</h1>
+                <p class="sign-in-description">Sign in with your Apple ID to sync drafts directly to your Drafts library on iPhone, iPad, and Mac.</p>
                 <div id="apple-sign-in-button" class="apple-sign-in"></div>
-                <p class="sign-in-or">or</p>
-                <button type="button" id="use-local-btn" class="btn-use-local">Save locally for now</button>
+                <div class="sign-in-divider"><span>or</span></div>
+                <button type="button" id="use-local-btn" class="btn-use-local">Continue without signing in</button>
             </div>
 
             <!-- Capture form -->
             <div class="card capture-card" id="capture-section">
                 <form id="capture-form" autocomplete="off">
 
-                    <div class="field-row flagged-row">
-                        <label class="field-label" for="draft-flagged">Flagged</label>
-                        <input type="checkbox" id="draft-flagged" name="flagged">
+                    <div class="content-field">
+                        <textarea
+                            id="draft-content"
+                            name="content"
+                            placeholder="What's on your mind?"
+                            spellcheck="true"
+                            rows="10"
+                        ></textarea>
                     </div>
 
-                    <div class="field-row">
-                        <label class="field-label" for="draft-tags">Tags</label>
-                        <input type="text" id="draft-tags" name="tags" placeholder="comma-separated tags" spellcheck="false">
-                    </div>
-
-                    <div class="field-row">
-                        <label class="field-label" for="draft-content">Content</label>
-                        <textarea id="draft-content" name="content" rows="12" spellcheck="true"></textarea>
-                    </div>
-
-                    <div class="syntax-button-row">
-                        <div class="syntax-group">
-                            <label class="field-label inline-label" for="draft-syntax">Syntax</label>
-                            <select id="draft-syntax" name="syntax">
-                                <option value="Plain Text">Plain Text</option>
-                                <option value="Markdown" selected>Markdown</option>
-                                <option value="MultiMarkdown">MultiMarkdown</option>
-                                <option value="GitHub Markdown">GitHub Markdown</option>
-                                <option value="Taskpaper">Taskpaper</option>
-                                <option value="Simple List">Simple List</option>
-                            </select>
+                    <div class="form-meta-row">
+                        <div class="meta-left">
+                            <div class="meta-field tags-field">
+                                <svg class="meta-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M2 4a2 2 0 012-2h4.586a1 1 0 01.707.293l5.414 5.414a1 1 0 010 1.414l-4.586 4.586a1 1 0 01-1.414 0L3.293 8.293A1 1 0 013 7.586V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
+                                    <circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
+                                </svg>
+                                <input type="text" id="draft-tags" name="tags" placeholder="tags, comma-separated" spellcheck="false">
+                            </div>
+                            <div class="meta-field syntax-field">
+                                <select id="draft-syntax" name="syntax">
+                                    <option value="Plain Text">Plain Text</option>
+                                    <option value="Markdown" selected>Markdown</option>
+                                    <option value="MultiMarkdown">MultiMarkdown</option>
+                                    <option value="GitHub Markdown">GitHub Markdown</option>
+                                    <option value="Taskpaper">Taskpaper</option>
+                                    <option value="Simple List">Simple List</option>
+                                </select>
+                            </div>
+                            <label class="meta-field flagged-field" title="Flag this draft">
+                                <input type="checkbox" id="draft-flagged" name="flagged">
+                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M3 2v12M3 2h9l-2.5 4L12 10H3" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                                </svg>
+                                <span>Flag</span>
+                            </label>
+                            <label class="meta-field location-field" title="Attach location">
+                                <input type="checkbox" id="draft-location" name="useLocation">
+                                <svg width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                                    <path d="M8 1.5A4.5 4.5 0 0112.5 6c0 3-4.5 8.5-4.5 8.5S3.5 9 3.5 6A4.5 4.5 0 018 1.5z" stroke="currentColor" stroke-width="1.3"/>
+                                    <circle cx="8" cy="6" r="1.5" stroke="currentColor" stroke-width="1.2"/>
+                                </svg>
+                                <span>Location</span>
+                            </label>
                         </div>
-                        <div class="button-group">
-                            <button type="button" id="clear-btn" class="btn-clear">CLEAR</button>
-                            <button type="submit" class="btn-create">CREATE</button>
+                        <div class="meta-right">
+                            <button type="button" id="clear-btn" class="btn-clear">Clear</button>
+                            <button type="submit" class="btn-create">
+                                <span class="btn-create-label">Create</span>
+                                <span class="loading-spinner" aria-hidden="true" style="display:none"></span>
+                            </button>
                         </div>
-                    </div>
-
-                    <div class="field-row location-row">
-                        <input type="checkbox" id="draft-location" name="useLocation">
-                        <label for="draft-location">Use Location</label>
                     </div>
 
                 </form>
             </div>
 
-            <!-- Queue (offline / pre-auth buffer) -->
+            <!-- Queue -->
             <div id="queue-section" class="card queue-card" style="display: none;">
                 <div class="queue-header">
                     <span class="queue-title">Queued Drafts (<span id="queue-count">0</span>)</span>
@@ -96,45 +122,47 @@
         </main>
 
         <footer class="site-footer">
-            <a href="https://docs.getdrafts.com/docs/extensions/web-capture" class="help-link" target="_blank" rel="noopener">Drafts Capture Help</a>
-            <p class="sign-out-hint">Sign out after use on public or shared computers</p>
-            <button type="button" id="sign-out-btn" class="btn-sign-out">Sign out</button>
-
+            <nav class="footer-nav">
+                <a href="https://docs.getdrafts.com/docs/extensions/web-capture" class="help-link" target="_blank" rel="noopener">Help</a>
+                <span class="footer-sep">·</span>
+                <button type="button" id="sign-out-btn" class="btn-sign-out">Sign out</button>
+            </nav>
             <div class="keyboard-shortcuts">
-                <h3>Keyboard Shortcuts</h3>
                 <table>
                     <tbody>
-                        <tr><td class="key">shift-ctrl-return</td><td class="action">Create Draft</td></tr>
-                        <tr><td class="key">shift-ctrl-B</td><td class="action">Edit content</td></tr>
-                        <tr><td class="key">shift-ctrl-T</td><td class="action">Edit tags</td></tr>
-                        <tr><td class="key">shift-ctrl-L</td><td class="action">Toggle flagged</td></tr>
+                        <tr><td class="key">⇧⌃↩</td><td class="action">Create Draft</td></tr>
+                        <tr><td class="key">⇧⌃B</td><td class="action">Edit content</td></tr>
+                        <tr><td class="key">⇧⌃T</td><td class="action">Edit tags</td></tr>
+                        <tr><td class="key">⇧⌃L</td><td class="action">Toggle flagged</td></tr>
                     </tbody>
                 </table>
             </div>
+            <p class="sign-out-hint">Sign out after use on shared computers</p>
         </footer>
 
     </div>
 
-    <!-- CloudKit token: set window.CLOUDKIT_API_TOKEN to override baked-in token -->
     <script src="config.js"></script>
-    <!-- Register Service Worker proxy before CloudKit SDK loads.
-         SW intercepts api.apple-cloudkit.com at the network layer and
-         rewrites requests through the Cloudflare Worker, satisfying the
-         token's domain restriction. skipWaiting+clients.claim means the SW
-         controls this page immediately without a reload. -->
     <script>
     window.__swReady = ('serviceWorker' in navigator)
         ? navigator.serviceWorker
               .register('sw.js')
-              .then(reg => navigator.serviceWorker.ready)
+              .then(() => {
+                  if (navigator.serviceWorker.controller) return Promise.resolve();
+                  return new Promise(resolve => {
+                      const t = setTimeout(resolve, 3000);
+                      navigator.serviceWorker.addEventListener('controllerchange', () => {
+                          clearTimeout(t); resolve();
+                      }, { once: true });
+                  });
+              })
               .catch(() => Promise.resolve())
         : Promise.resolve();
     </script>
-    <!-- CloudKit JS SDK — fires 'cloudkitloaded' event when ready -->
     <script async src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
-    <!-- CloudKit integration — listens for cloudkitloaded -->
     <script src="js/cloudkit.js"></script>
-    <!-- App logic -->
     <script src="js/app.js"></script>
+    <!-- Pretext: accurate textarea auto-sizing without DOM reflow -->
+    <script type="module" src="js/textarea-resize.js"></script>
 </body>
 </html>

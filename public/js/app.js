@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function () {
         document.getElementById('draft-tags').value    = '';
         document.getElementById('draft-flagged').checked = false;
         document.getElementById('draft-content').focus();
+        window.__resizeTextarea?.();
     }
 
     async function handleFormSubmit(e) {
@@ -151,12 +152,24 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showLoading() {
         const btn = document.querySelector('.btn-create');
-        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="loading-spinner"></span>CREATING\u2026'; }
+        if (btn) {
+            btn.disabled = true;
+            const label   = btn.querySelector('.btn-create-label');
+            const spinner = btn.querySelector('.loading-spinner');
+            if (label)   label.style.display   = 'none';
+            if (spinner) spinner.style.display  = '';
+        }
     }
 
     function hideLoading() {
         const btn = document.querySelector('.btn-create');
-        if (btn) { btn.disabled = false; btn.textContent = 'CREATE'; }
+        if (btn) {
+            btn.disabled = false;
+            const label   = btn.querySelector('.btn-create-label');
+            const spinner = btn.querySelector('.loading-spinner');
+            if (label)   label.style.display   = '';
+            if (spinner) spinner.style.display  = 'none';
+        }
     }
 
     // ── Preferences ───────────────────────────────────────────
@@ -183,6 +196,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const text = p.get('text');
         if (text) {
             document.getElementById('draft-content').value = decodeURIComponent(text);
+            window.__resizeTextarea?.();
         } else {
             // title+url+sel bookmarklet format (matches official site)
             const url   = p.get('url');
@@ -192,6 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 let s = `[${title}](${url})`;
                 if (sel) s += `\n\n> ${sel}\n`;
                 document.getElementById('draft-content').value = s;
+                window.__resizeTextarea?.();
             }
         }
 
@@ -359,6 +374,7 @@ document.addEventListener('DOMContentLoaded', function () {
         draftQueue.splice(index, 1);
         saveDraftQueue();
         document.getElementById('draft-content').focus();
+        window.__resizeTextarea?.();
     }
 
     function removeDraft(index) {
