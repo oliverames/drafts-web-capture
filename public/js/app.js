@@ -32,7 +32,23 @@ document.addEventListener('DOMContentLoaded', function () {
     // Auto-save current tab + refresh tab title as user types
     document.getElementById('draft-content')?.addEventListener('input', () => {
         clearTimeout(saveTimer);
-        saveTimer = setTimeout(() => { saveCurrentTabContent(); renderTabs(); }, 400);
+        saveTimer = setTimeout(() => {
+            saveCurrentTabContent();
+            // Update only the active tab's label — no need to rebuild all tabs
+            const activeEl = document.querySelector('#tab-scroll .tab-item.active');
+            const activeTab = tabs.find(t => t.id === activeTabId);
+            if (activeEl && activeTab) {
+                const lbl = activeEl.querySelector('.tab-label');
+                if (lbl) lbl.textContent = tabTitle(activeTab);
+                const hasEmail = !!localStorage.getItem('mailDropAddress');
+                activeEl.classList.toggle('local-only', !!(activeTab.content.trim() && !hasEmail));
+            }
+            const sendAllBtn = document.getElementById('send-all-btn');
+            if (sendAllBtn) {
+                const hasEmail = !!localStorage.getItem('mailDropAddress');
+                sendAllBtn.disabled = !(tabs.filter(t => t.content.trim()).length > 1 && hasEmail);
+            }
+        }, 400);
     });
     document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
     document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
@@ -282,24 +298,26 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!scrollEl) return;
         let isDown = false, startX, scrollLeft;
 
+        function onMouseUp() {
+            isDown = false;
+            scrollEl.classList.remove('dragging');
+            document.removeEventListener('mouseup', onMouseUp);
+            document.removeEventListener('mousemove', onMouseMove);
+        }
+        function onMouseMove(e) {
+            e.preventDefault();
+            const x    = e.pageX - scrollEl.getBoundingClientRect().left;
+            const walk = (x - startX) * 1.5;
+            scrollEl.scrollLeft = scrollLeft - walk;
+        }
         scrollEl.addEventListener('mousedown', e => {
             if (e.target.closest('.tab-close')) return;
             isDown = true;
             scrollEl.classList.add('dragging');
             startX = e.pageX - scrollEl.getBoundingClientRect().left;
             scrollLeft = scrollEl.scrollLeft;
-        });
-
-        document.addEventListener('mouseup', () => {
-            isDown = false;
-            scrollEl.classList.remove('dragging');
-        });
-        document.addEventListener('mousemove', e => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x    = e.pageX - scrollEl.getBoundingClientRect().left;
-            const walk = (x - startX) * 1.5;
-            scrollEl.scrollLeft = scrollLeft - walk;
+            document.addEventListener('mouseup', onMouseUp);
+            document.addEventListener('mousemove', onMouseMove);
         });
     }
 
@@ -579,11 +597,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function sendDraftData(draftData, email) {
-        const addr = email || localStorage.getItem('mailDropAddress');
         return fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: addr, ...draftData })
+            body: JSON.stringify({ email, ...draftData })
         }).then(r => r.json().then(d => {
             if (!r.ok) return Promise.reject(d.error || 'API Error');
             return { success: true };
@@ -926,10 +943,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function clearAllTabs() {
         const btn = document.getElementById('clear-all-tabs-btn');
-        if (btn && btn.dataset.confirmPending === '1') {
+        if (!btn) return;
+        if (clearAllConfirmTimer !== null) {
             clearTimeout(clearAllConfirmTimer);
             clearAllConfirmTimer = null;
-            delete btn.dataset.confirmPending;
             btn.classList.remove('btn-confirm-danger');
             btn.textContent = 'Clear All';
             tabs = [makeTab()];
@@ -937,13 +954,11 @@ document.addEventListener('DOMContentLoaded', function () {
             saveTabs();
             renderTabs();
             loadTabContent(activeTabId);
-        } else if (btn) {
-            btn.dataset.confirmPending = '1';
+        } else {
             btn.classList.add('btn-confirm-danger');
             btn.textContent = 'Confirm?';
             clearAllConfirmTimer = setTimeout(() => {
                 clearAllConfirmTimer = null;
-                delete btn.dataset.confirmPending;
                 btn.classList.remove('btn-confirm-danger');
                 btn.textContent = 'Clear All';
             }, 3000);
