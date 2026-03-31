@@ -50,6 +50,8 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
     document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
+    document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
+    document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
 
     // ── Auth & Initialization ─────────────────────────────────
     const checkAuth = () => {
@@ -523,8 +525,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // ── Preferences ───────────────────────────────────────────
 
-    function savePreferences() {}
-    function loadPreferences() {}
+    function savePreferences() {
+        const sel = document.getElementById('draft-syntax');
+        if (sel) localStorage.setItem('preferredSyntax', sel.value);
+        const loc = document.getElementById('draft-location');
+        if (loc) localStorage.setItem('useLocation', loc.checked);
+    }
+    function loadPreferences() {
+        const syntax = localStorage.getItem('preferredSyntax');
+        if (syntax) {
+            const sel = document.getElementById('draft-syntax');
+            if (sel) sel.value = syntax;
+        }
+        if (localStorage.getItem('useLocation') === 'true') {
+            const loc = document.getElementById('draft-location');
+            if (loc) loc.checked = true;
+        }
+    }
 
     // ── URL parameters (bookmarklet) ──────────────────────────
 
@@ -547,6 +564,23 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const tags = p.get('tags');
         if (tags) setTagsFromString(decodeURIComponent(tags));
+
+        if (p.get('flagged') === '1') {
+            const f = document.getElementById('draft-flagged');
+            if (f) f.checked = true;
+        }
+
+        const syntax = p.get('syntax');
+        if (syntax) {
+            const sel = document.getElementById('draft-syntax');
+            if (sel) {
+                for (let i = 0; i < sel.options.length; i++) {
+                    if (sel.options[i].value.toLowerCase() === syntax.toLowerCase()) {
+                        sel.selectedIndex = i; break;
+                    }
+                }
+            }
+        }
 
         const redirect = p.get('redirect');
         const urlParam = p.get('url');
