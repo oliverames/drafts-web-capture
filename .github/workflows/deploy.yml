@@ -25,14 +25,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Inject CloudKit API token
-        env:
-          CLOUDKIT_API_TOKEN: ${{ secrets.CLOUDKIT_API_TOKEN }}
-        run: |
-          TOKEN="${CLOUDKIT_API_TOKEN:-}"
-          printf 'window.CLOUDKIT_API_TOKEN = %s;\n' "\"$TOKEN\"" > public/config.js
-
-      - name: Upload Pages artifact
+            - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: public

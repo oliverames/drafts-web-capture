@@ -7,17 +7,21 @@ import { prepare, layout } from 'https://esm.sh/@chenglou/pretext';
 const ta = document.getElementById('draft-content');
 
 if (ta) {
-    prepare(ta);
+    try {
+        prepare(ta);
 
-    const resize = () => layout(ta);
+        const resize = () => { try { layout(ta); } catch {} };
 
-    ta.addEventListener('input', resize);
-    window.addEventListener('resize', resize);
+        ta.addEventListener('input', resize);
+        window.addEventListener('resize', resize);
 
-    // Initial layout — runs after HTML is parsed (modules are deferred).
-    // URL-param content may not be set yet (app.js uses DOMContentLoaded),
-    // so we also expose window.__resizeTextarea for app.js to call.
-    resize();
+        // Initial layout — runs after HTML is parsed (modules are deferred).
+        // URL-param content may not be set yet (app.js uses DOMContentLoaded),
+        // so we also expose window.__resizeTextarea for app.js to call.
+        resize();
 
-    window.__resizeTextarea = resize;
+        window.__resizeTextarea = resize;
+    } catch {
+        // Pretext may fail if CodeMirror hides the textarea — safe to ignore
+    }
 }

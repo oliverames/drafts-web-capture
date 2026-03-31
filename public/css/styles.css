@@ -4,9 +4,9 @@
    ============================================================ */
 
 :root {
-    --blue:       #4A90D9;
-    --blue-dim:   rgba(74, 144, 217, 0.14);
-    --blue-hover: #3a7fc7;
+    --blue:       #173973;
+    --blue-dim:   rgba(23, 57, 115, 0.14);
+    --blue-hover: #0f2a5e;
     --ink:        #1c1c1e;
     --ink-2:      #3a3a3c;
     --ink-3:      #636366;
@@ -111,9 +111,23 @@ body {
     font-family: inherit;
     cursor: pointer;
     transition: background 0.12s;
-    box-shadow: 0 1px 3px rgba(74,144,217,.28);
+    box-shadow: 0 1px 3px rgba(23,57,115,.28);
 }
 .btn-send-all:hover { background: var(--blue-hover); }
+
+.btn-clear-all-tabs {
+    background: none;
+    border: 1px solid var(--divider);
+    color: var(--ink-4);
+    padding: 5px 13px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: border-color 0.12s, color 0.12s;
+}
+.btn-clear-all-tabs:hover { border-color: var(--ink-5); color: var(--ink-2); }
 
 /* ── Alerts ──────────────────────────────────────────────── */
 
@@ -153,12 +167,15 @@ body {
     margin: 0 auto 20px;
     width: 56px;
     height: 56px;
-    background: #f0f6ff;
-    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 3px rgba(74,144,217,.15), 0 0 0 1px rgba(74,144,217,.1);
+}
+.sign-in-icon img {
+    width: 56px;
+    height: 56px;
+    border-radius: 13px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.12), 0 0 0 0.5px rgba(0,0,0,0.08);
 }
 
 .sign-in-title {
@@ -179,47 +196,22 @@ body {
     margin-right: auto;
 }
 
-/* CloudKit SDK renders its functional button here — kept hidden, delegated to by our button */
+/* CloudKit SDK renders the official Sign in with Apple button here */
 .apple-sign-in-ck {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    overflow: hidden;
-    opacity: 0;
-    pointer-events: none;
-    clip: rect(0,0,0,0);
-}
-
-/* Official Apple "Sign in with Apple ID" button */
-.btn-apple-id {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 9px;
+    display: block;
     width: 100%;
     max-width: 320px;
     height: 50px;
-    background: #000;
-    color: #fff;
-    border: none;
-    border-radius: 12px;
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', sans-serif;
-    letter-spacing: -0.01em;
+    margin: 0 auto 4px;
+    border-radius: 15px;
+    overflow: hidden;
     cursor: pointer;
-    transition: background 0.12s;
-    margin-bottom: 4px;
 }
-.btn-apple-id:hover  { background: #1a1a1a; }
-.btn-apple-id:active { background: #333; }
-
-.apple-icon {
-    width: 17px;
-    height: 20px;
-    fill: #fff;
-    flex-shrink: 0;
-    margin-top: -1px; /* optical alignment */
+/* Make the CloudKit-rendered button fill the container */
+.apple-sign-in-ck > div,
+.apple-sign-in-ck .apple-auth-button {
+    /* width: 100% !important; */
+    /* height: 100% !important; */
 }
 
 .sign-in-divider {
@@ -287,13 +279,16 @@ body {
     cursor: pointer;
     white-space: nowrap;
     border-bottom: 2px solid transparent;
-    transition: color 0.1s, border-color 0.1s;
+    transition: color 0.1s, border-color 0.1s, background 0.1s;
     max-width: 160px;
+    min-width: 80px;
+    flex-shrink: 1;
 }
-.tab-item:hover { color: var(--ink-2); }
+.tab-item:hover:not(.active) { color: var(--ink-2); background: rgba(0,0,0,0.03); }
 .tab-item.active {
-    color: var(--ink);
-    font-weight: 500;
+    color: var(--blue);
+    font-weight: 600;
+    background: var(--surface);
     border-bottom-color: var(--blue);
 }
 
@@ -325,16 +320,29 @@ body {
 .tab-new-btn {
     flex-shrink: 0;
     border: none;
-    background: transparent;
+    background: var(--surface-2);
     color: var(--ink-4);
     font-size: 18px;
     line-height: 1;
-    padding: 0 8px;
+    padding: 0 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    margin-left: auto;
+    position: sticky;
+    right: 0;
+    z-index: 2;
     transition: color 0.1s;
+}
+/* Gradient fade covering content that scrolls under the + button */
+.tab-new-btn::before {
+    content: '';
+    position: absolute;
+    right: 100%;
+    top: 0;
+    width: 24px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--surface-2));
+    pointer-events: none;
 }
 .tab-new-btn:hover { color: var(--blue); }
 
@@ -453,16 +461,18 @@ body {
     gap: 8px;
     padding: 10px 14px 10px 16px;
     background: var(--surface-2);
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
+    overflow: hidden;
 }
 
 .meta-left {
     display: flex;
     align-items: center;
     gap: 4px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     flex: 1;
     min-width: 0;
+    overflow: hidden;
 }
 
 .meta-right {
@@ -488,20 +498,25 @@ body {
 /* Tags chip area */
 .tags-field {
     flex: 1 1 auto;
-    min-width: 60px;
-    align-items: flex-start;
-    flex-wrap: wrap;
+    min-width: 40px;
+    max-width: 200px;
+    align-items: center;
+    flex-wrap: nowrap;
     gap: 3px;
+    overflow: hidden;
 }
 
 .tags-area {
     display: flex;
     align-items: center;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     gap: 3px;
     flex: 1;
     min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
 }
+.tags-area::-webkit-scrollbar { display: none; }
 
 #tags-input {
     flex: 1;
@@ -547,7 +562,7 @@ body {
     opacity: 0.55;
     transition: opacity 0.1s, background 0.1s;
 }
-.tag-chip-remove:hover { opacity: 1; background: rgba(74,144,217,0.2); }
+.tag-chip-remove:hover { opacity: 1; background: rgba(23,57,115,0.2); }
 
 /* Syntax select */
 .syntax-field { }
@@ -588,20 +603,32 @@ body {
     pointer-events: none;
     width: 0; height: 0;
 }
-.flagged-field:has(input:checked),
+.flagged-field:has(input:checked) {
+    background: rgba(255,149,0,.12);
+    color: #c07000;
+}
 .location-field:has(input:checked) {
     background: var(--blue-dim);
     color: var(--blue);
 }
 
-/* Divider between meta fields */
-.meta-left > .meta-field + .meta-field::before {
+/* Divider between meta fields — only for non-interactive wrapper fields */
+.meta-left > .meta-field:not(.flagged-field):not(.location-field) + .meta-field:not(.flagged-field):not(.location-field)::before {
     content: '';
     display: block;
     width: 1px;
     height: 14px;
     background: var(--divider);
     margin-right: 4px;
+    flex-shrink: 0;
+}
+
+/* Standalone separator spans (used before flagged/location interactive labels) */
+.meta-sep {
+    display: block;
+    width: 1px;
+    height: 14px;
+    background: var(--divider);
     flex-shrink: 0;
 }
 
@@ -638,7 +665,7 @@ body {
     align-items: center;
     gap: 5px;
     transition: background 0.12s;
-    box-shadow: 0 1px 3px rgba(74,144,217,.3);
+    box-shadow: 0 1px 3px rgba(23,57,115,.3);
     letter-spacing: 0.01em;
 }
 .btn-create:hover { background: var(--blue-hover); }
@@ -735,7 +762,7 @@ body {
     cursor: pointer;
     transition: all 0.12s;
 }
-.submit-draft-btn { border-color: rgba(74,144,217,.4); color: var(--blue); }
+.submit-draft-btn { border-color: rgba(23,57,115,.4); color: var(--blue); }
 .submit-draft-btn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
 .edit-draft-btn:hover { border-color: var(--blue); color: var(--blue); }
 .remove-draft-btn:hover { border-color: #ff3b30; color: #ff3b30; }
@@ -776,6 +803,14 @@ body {
 }
 
 /* ── Footer ──────────────────────────────────────────────── */
+
+/* Hide editor-only footer items when sign-in card is visible */
+.page-wrapper:has(#capture-section[style*="none"]) .keyboard-shortcuts,
+.page-wrapper:has(#capture-section[style*="none"]) .sign-out-hint,
+.page-wrapper:has(#capture-section[style*="none"]) .btn-sign-out,
+.page-wrapper:has(#capture-section[style*="none"]) .footer-sep {
+    display: none !important;
+}
 
 .site-footer {
     text-align: center;
@@ -865,9 +900,31 @@ body {
 /* ── Responsive ──────────────────────────────────────────── */
 
 @media (max-width: 560px) {
-    .page-wrapper { padding: 0 12px 40px; }
-    .form-meta-row { gap: 6px; }
-    .meta-left { gap: 2px; }
-    .btn-sign-out { width: 100%; margin-top: 8px; }
-    .footer-nav { flex-direction: column; gap: 6px; }
+    .page-wrapper { padding: 0 10px 40px; }
+    .site-header { padding: 14px 0 10px; }
+    .logo-brand { font-size: 1.05rem; }
+    .logo-suffix { font-size: 0.88rem; }
+    .form-meta-row {
+        flex-wrap: wrap;
+        gap: 6px;
+        padding: 8px 10px;
+    }
+    .meta-left {
+        flex-wrap: wrap;
+        gap: 2px;
+        flex-basis: 100%;
+    }
+    .tags-field { max-width: none; flex-basis: 100%; }
+    .meta-right { margin-left: auto; }
+    .btn-clear { padding: 5px 10px; font-size: 0.74rem; }
+    .btn-create { padding: 5px 12px; font-size: 0.74rem; }
+    .tab-item { padding: 0 8px; font-size: 0.74rem; max-width: 120px; }
+    .sign-in-card { padding: 36px 20px 32px; }
+    .sign-in-description { font-size: 0.84rem; }
+    #draft-content { padding: 10px 14px 12px; min-height: 200px; }
+    .editor-header { padding: 6px 10px 0; }
+    .btn-sign-out { margin-top: 4px; }
+    .footer-nav { flex-wrap: wrap; justify-content: center; gap: 4px 10px; }
+    .footer-sep { display: none; }
+    .keyboard-shortcuts { display: none; } /* hide on mobile — no keyboard */
 }

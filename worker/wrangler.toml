@@ -1,6 +1,6 @@
 name = "drafts-ck-proxy"
 main = "index.js"
-compatibility_date = "2025-01-01"
+compatibility_date = "2023-10-30"
 
-[vars]
-# No secrets needed — the API token lives in the browser, not here
+# Secret required:
+# npx wrangler secret put RESEND_API_KEY
