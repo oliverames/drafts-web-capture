@@ -6,42 +6,27 @@ document.addEventListener('DOMContentLoaded', function () {
     let tagList     = [];
     let draftQueue  = [];
     let saveTimer   = null;
+    let attachedFiles = [];
 
     // ── DOM refs ──────────────────────────────────────────────
     const captureForm    = document.getElementById('capture-form');
     const alertContainer = document.getElementById('alert-container');
 
-    // ── Editor helpers (CM6 or plain textarea) ────────────────
-    function setEditorContent(text) {
-        const el = document.getElementById('draft-content');
-        if (el) el.value = text;
-        if (window.__editor) window.__editor.setValue(text);
-        else window.__resizeTextarea?.();
-    }
-    function focusEditor() {
-        if (window.__editor) window.__editor.focus();
-        else document.getElementById('draft-content')?.focus();
-    }
-
     // ── Init ─────────────────────────────────────────────────
-
-    // Restore local-only mode immediately (don't wait for CloudKit to load)
-    if (localStorage.getItem('skipCloudKit') === '1') {
-        document.getElementById('capture-section').style.display = '';
-    }
-
     loadPreferences();
     loadTabs();             // must follow loadPreferences (new tabs inherit preferred syntax)
+    checkAuth();            // show setup screen if no mail drop address configured
     handleUrlParameters();
     loadDraftQueue();
     setupBeforeUnloadHandler();
     setupEditorToggle();
     setupTagInput();
+    setupTabDragScroll();
+    setupAttachments();
 
     if (captureForm) captureForm.addEventListener('submit', handleFormSubmit);
     document.getElementById('clear-btn')?.addEventListener('click', clearForm);
     document.getElementById('tab-new-btn')?.addEventListener('click', newTab);
-    setupTabBarDragScroll();
 
     // Auto-save current tab + refresh tab title as user types
     document.getElementById('draft-content')?.addEventListener('input', () => {
@@ -50,20 +35,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
     document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
-    document.getElementById('draft-syntax')?.addEventListener('change', saveCurrentTabContent);
-    document.getElementById('draft-flagged')?.addEventListener('change', saveCurrentTabContent);
-
-    // ── Auth & Initialization ─────────────────────────────────
-    const checkAuth = () => {
-        if (localStorage.getItem('mailDropAddress') || localStorage.getItem('skipCloudKit') === '1') {
-            document.getElementById('setup-section').style.display = 'none';
-            document.getElementById('capture-section').style.display = '';
-        } else {
-            document.getElementById('setup-section').style.display = '';
-            document.getElementById('capture-section').style.display = 'none';
-        }
-    };
-    checkAuth();
 
     document.getElementById('save-maildrop-btn')?.addEventListener('click', () => {
         const input = document.getElementById('maildrop-input');
@@ -75,7 +46,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 if (confirm('Submit queued drafts now?')) window.submitAllDrafts();
             }
         } else {
-            showAlert('Please enter a valid @drafts.io address', 'error');
+            showAlert('Please enter a valid @drafts.io or @maildrop.getdrafts.com address', 'error');
         }
     });
 
@@ -89,6 +60,16 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.setItem('skipCloudKit', '1');
         checkAuth();
     });
+
+    // ── Auth ──────────────────────────────────────────────────
+
+    function checkAuth() {
+        const email = localStorage.getItem('mailDropAddress');
+        const skip  = localStorage.getItem('skipCloudKit');
+        const setupSection = document.getElementById('setup-section');
+        if (!setupSection) return;
+        setupSection.style.display = (email || skip) ? 'none' : '';
+    }
 
     // ── Tabs ─────────────────────────────────────────────────
 
@@ -105,8 +86,8 @@ document.addEventListener('DOMContentLoaded', function () {
             id,
             content: data.content || '',
             tags:    data.tags    || '',
-            
-            
+            syntax:  data.syntax  || localStorage.getItem('preferredSyntax') || 'Markdown',
+            flagged: !!data.flagged,
         };
     }
 
@@ -137,33 +118,38 @@ document.addEventListener('DOMContentLoaded', function () {
         if (!tab) return;
         tab.content = window.__editor ? window.__editor.getValue() : document.getElementById('draft-content').value;
         tab.tags    = document.getElementById('draft-tags').value;
-        
-        
+        tab.syntax  = document.getElementById('draft-syntax').value;
+        tab.flagged = document.getElementById('draft-flagged').checked;
         saveTabs();
     }
 
     function loadTabContent(id) {
         const tab = tabs.find(t => t.id === id);
         if (!tab) return;
-        setEditorContent(tab.content);
+        document.getElementById('draft-content').value   = tab.content;
         setTagsFromString(tab.tags);
-        
+        const sel = document.getElementById('draft-syntax');
+        if (sel) sel.value = tab.syntax;
+        document.getElementById('draft-flagged').checked = tab.flagged;
+        window.__resizeTextarea?.();
+        if (window.__editor) window.__editor.setValue(tab.content);
         showWriteMode();
     }
 
     function renderTabs() {
-        const bar           = document.getElementById('tab-bar');
-        const newBtn        = document.getElementById('tab-new-btn');
-        const sendAllBtn    = document.getElementById('send-all-btn');
-        const clearAllBtn   = document.getElementById('clear-all-tabs-btn');
-        if (!bar) return;
-        bar.querySelectorAll('.tab-item').forEach(el => el.remove());
-        // Show header "Send All" button only when multiple tabs have content
+        const scrollEl   = document.getElementById('tab-scroll');
+        const sendAllBtn = document.getElementById('send-all-btn');
+        const clearAllBtn = document.getElementById('clear-all-tabs-btn');
+        if (!scrollEl) return;
+
+        scrollEl.querySelectorAll('.tab-item').forEach(el => el.remove());
+
+        const contentfulTabs = tabs.filter(t => t.content.trim());
+        const hasEmail = !!localStorage.getItem('mailDropAddress');
+
         if (sendAllBtn) {
-            const contentfulTabs = tabs.filter(t => t.content.trim());
             sendAllBtn.style.display = contentfulTabs.length > 1 ? '' : 'none';
         }
-        // Show "Clear All" when 2+ tabs exist
         if (clearAllBtn) {
             clearAllBtn.style.display = tabs.length > 1 ? '' : 'none';
         }
@@ -172,6 +158,11 @@ document.addEventListener('DOMContentLoaded', function () {
             const el = document.createElement('button');
             el.type = 'button';
             el.className = 'tab-item' + (tab.id === activeTabId ? ' active' : '');
+
+            // Fade indicator: content exists but no email set
+            if (tab.content.trim() && !hasEmail) {
+                el.classList.add('local-only');
+            }
 
             const lbl = document.createElement('span');
             lbl.className = 'tab-label';
@@ -183,14 +174,13 @@ document.addEventListener('DOMContentLoaded', function () {
                 x.type = 'button';
                 x.className = 'tab-close';
                 x.setAttribute('aria-label', 'Close draft');
-                x.innerHTML = '&times;';
-                x.addEventListener('click', e => { e.stopPropagation(); closeTab(tab.id); });
+                x.textContent = '\u00d7';
+                x.addEventListener('click', evt => { evt.stopPropagation(); closeTab(tab.id); });
                 el.appendChild(x);
             }
 
             el.addEventListener('click', () => switchTab(tab.id));
-            if (newBtn) bar.insertBefore(el, newBtn);
-            else        bar.appendChild(el);
+            scrollEl.appendChild(el);
         });
     }
 
@@ -213,31 +203,33 @@ document.addEventListener('DOMContentLoaded', function () {
         renderTabs();
         loadTabContent(tab.id);
         focusEditor();
+        const scrollEl = document.getElementById('tab-scroll');
+        if (scrollEl) scrollEl.scrollLeft = scrollEl.scrollWidth;
     }
 
     function closeTab(id) {
         const tab = tabs.find(t => t.id === id);
         if (!tab) return;
 
-        // Auto-send the draft if it has content and user is authenticated
+        // Auto-send or queue content before closing
         if (tab.content.trim()) {
-            const draftData = { content: tab.content.trim(), tags: tab.tags, syntax: tab.syntax, flagged: tab.flagged, latitude: 0, longitude: 0 };
             const email = localStorage.getItem('mailDropAddress');
-        if (email) {
-                fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftData })
-            }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
-                    .then(() => showAlert('Closed tab sent to Drafts.', 'success'))
-                    .catch(err => {
-                        console.error('Auto-send on close failed:', err);
-                        addToQueue(draftData);
-                        showAlert('Tab queued for sync.', 'warning');
-                    });
+            const payload = {
+                content: tab.content.trim(),
+                tags:    tab.tags,
+                syntax:  tab.syntax,
+                flagged: tab.flagged,
+                latitude: 0, longitude: 0,
+                attachments: []
+            };
+            if (email) {
+                sendDraftData(payload, email).catch(() => {
+                    addToQueue(payload);
+                    showAlert('Draft queued (send failed).', 'warning');
+                });
             } else {
-                addToQueue(draftData);
-                showAlert('Tab saved locally. Add a Mail Drop address to sync.', 'info');
+                addToQueue(payload);
+                showAlert('Draft queued. Add a Mail Drop address to sync.', 'info');
             }
         }
 
@@ -250,6 +242,34 @@ document.addEventListener('DOMContentLoaded', function () {
         saveTabs();
         renderTabs();
         loadTabContent(activeTabId);
+    }
+
+    // ── Tab drag-to-scroll ────────────────────────────────────
+
+    function setupTabDragScroll() {
+        const scrollEl = document.getElementById('tab-scroll');
+        if (!scrollEl) return;
+        let isDown = false, startX, scrollLeft;
+
+        scrollEl.addEventListener('mousedown', e => {
+            if (e.target.closest('.tab-close')) return;
+            isDown = true;
+            scrollEl.classList.add('dragging');
+            startX = e.pageX - scrollEl.getBoundingClientRect().left;
+            scrollLeft = scrollEl.scrollLeft;
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDown = false;
+            scrollEl.classList.remove('dragging');
+        });
+        document.addEventListener('mousemove', e => {
+            if (!isDown) return;
+            e.preventDefault();
+            const x    = e.pageX - scrollEl.getBoundingClientRect().left;
+            const walk = (x - startX) * 1.5;
+            scrollEl.scrollLeft = scrollLeft - walk;
+        });
     }
 
     // ── Tag chips ─────────────────────────────────────────────
@@ -278,8 +298,8 @@ document.addEventListener('DOMContentLoaded', function () {
             const rm = document.createElement('button');
             rm.type = 'button';
             rm.className = 'tag-chip-remove';
-            rm.setAttribute('aria-label', `Remove ${tag}`);
-            rm.innerHTML = '&times;';
+            rm.setAttribute('aria-label', 'Remove ' + tag);
+            rm.textContent = '\u00d7';
             rm.addEventListener('click', () => {
                 tagList.splice(i, 1);
                 syncTagsHidden();
@@ -321,13 +341,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
 
-        // Commit on blur
         input.addEventListener('blur', () => {
             const v = input.value.replace(/,/g, '').trim();
             if (v) { addTag(v); input.value = ''; }
         });
 
-        // Handle paste with commas
         input.addEventListener('input', () => {
             if (input.value.includes(',')) {
                 const parts = input.value.split(',');
@@ -340,13 +358,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Editor toggle (Write / Preview) ──────────────────────
 
     function showWriteMode() {
-        const cm  = document.getElementById('cm-editor-root');
-        const ta  = document.getElementById('draft-content');
-        const pre = document.getElementById('preview-pane');
-        const wb  = document.getElementById('view-write');
-        const pb  = document.getElementById('view-preview');
-        if (cm)       cm.style.display  = '';
-        else if (ta)  ta.style.display  = '';
+        const ta     = document.getElementById('draft-content');
+        const pre    = document.getElementById('preview-pane');
+        const cmRoot = document.getElementById('cm-editor-root');
+        const wb     = document.getElementById('view-write');
+        const pb     = document.getElementById('view-preview');
+        if (cmRoot) cmRoot.style.display = '';
+        else if (ta) ta.style.display = '';
         if (pre) pre.style.display = 'none';
         wb?.classList.add('active');
         pb?.classList.remove('active');
@@ -364,30 +382,81 @@ document.addEventListener('DOMContentLoaded', function () {
         previewBtn.addEventListener('click', () => {
             previewBtn.classList.add('active');
             writeBtn.classList.remove('active');
-            const cm = document.getElementById('cm-editor-root');
-            if (cm)  cm.style.display = 'none';
-            else     ta.style.display = 'none';
+            const cmRoot = document.getElementById('cm-editor-root');
+            if (cmRoot) cmRoot.style.display = 'none';
+            else ta.style.display = 'none';
             previewEl.style.display = '';
             const md = window.__editor ? window.__editor.getValue() : (ta.value || '');
             if (window.marked) {
-                previewEl.innerHTML = window.marked.parse(
-                    md || '*Nothing to preview yet.*'
+                previewEl.textContent = '';
+                const fragment = document.createRange().createContextualFragment(
+                    window.marked.parse(md || '<em>Nothing to preview yet.</em>')
                 );
+                previewEl.appendChild(fragment);
             } else {
                 previewEl.textContent = md || 'Nothing to preview yet.';
             }
         });
     }
 
+    // ── Attachments ───────────────────────────────────────────
+
+    function setupAttachments() {
+        const fileInput   = document.getElementById('draft-attachments');
+        const attachLabel = document.querySelector('.attach-field');
+        const labelText   = document.getElementById('attach-label');
+        if (!fileInput || !attachLabel) return;
+
+        attachLabel.addEventListener('click', e => {
+            e.preventDefault();
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', () => {
+            attachedFiles = Array.from(fileInput.files || []);
+            if (attachedFiles.length > 0) {
+                labelText.textContent = attachedFiles.length + ' file' + (attachedFiles.length > 1 ? 's' : '');
+                attachLabel.classList.add('has-files');
+            } else {
+                labelText.textContent = 'Attach';
+                attachLabel.classList.remove('has-files');
+            }
+        });
+    }
+
+    async function readFilesAsBase64(files) {
+        return Promise.all(files.map(file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload  = () => resolve({ filename: file.name, content: reader.result.split(',')[1] });
+            reader.onerror = reject;
+            reader.readAsDataURL(file);
+        })));
+    }
+
+    // ── Focus helper ─────────────────────────────────────────
+
+    function focusEditor() {
+        if (window.__editor) window.__editor.focus();
+        else document.getElementById('draft-content')?.focus();
+    }
+
     // ── Form ─────────────────────────────────────────────────
 
     function clearForm() {
-        setEditorContent('');
+        document.getElementById('draft-content').value = '';
+        if (window.__editor) window.__editor.setValue('');
         tagList = [];
         renderChips();
-        
+        document.getElementById('draft-flagged').checked = false;
+        attachedFiles = [];
+        const fi = document.getElementById('draft-attachments');
+        if (fi) fi.value = '';
+        const lbl = document.getElementById('attach-label');
+        if (lbl) lbl.textContent = 'Attach';
+        document.querySelector('.attach-field')?.classList.remove('has-files');
         showWriteMode();
         focusEditor();
+        window.__resizeTextarea?.();
         saveCurrentTabContent();
         renderTabs();
     }
@@ -395,14 +464,11 @@ document.addEventListener('DOMContentLoaded', function () {
     async function handleFormSubmit(e) {
         e.preventDefault();
 
-        const content     = document.getElementById('draft-content').value;
+        const content     = window.__editor ? window.__editor.getValue() : document.getElementById('draft-content').value;
         const tags        = document.getElementById('draft-tags').value;
-        const sel         = document.getElementById('draft-syntax');
-        const syntax      = sel ? sel.value : 'Markdown';
-        const chk         = document.getElementById('draft-flagged');
-        const flagged     = chk ? chk.checked : false;
-        const locChk      = document.getElementById('draft-location');
-        const useLocation = locChk ? locChk.checked : false;
+        const syntax      = document.getElementById('draft-syntax').value;
+        const flagged     = document.getElementById('draft-flagged').checked;
+        const useLocation = document.getElementById('draft-location').checked;
 
         if (!content || !content.trim()) {
             showAlert('Content is required.', 'error');
@@ -422,37 +488,51 @@ document.addEventListener('DOMContentLoaded', function () {
             } catch { /* proceed without location */ }
         }
 
-        const draftData = { content: content.trim(), tags, syntax, flagged, latitude, longitude };
+        let attachments = [];
+        if (attachedFiles.length > 0) {
+            try { attachments = await readFilesAsBase64(attachedFiles); }
+            catch { showAlert('Could not read attachments — sending without them.', 'warning'); }
+        }
 
+        const draftData = { content: content.trim(), tags, syntax, flagged, latitude, longitude, attachments };
         const email = localStorage.getItem('mailDropAddress');
+
         if (email) {
             showLoading();
-            fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftData })
-            }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
-                .then(result => {
+            sendDraftData(draftData, email)
+                .then(() => {
                     hideLoading();
+                    // Clear the current tab content
+                    const tab = tabs.find(t => t.id === activeTabId);
+                    if (tab) { tab.content = ''; tab.tags = ''; tab.flagged = false; }
+                    saveTabs();
                     clearForm();
-                    // Single tab: stay on blank canvas. Multiple tabs: keep others.
                     renderTabs();
-                    showAlert(
-                        `Draft created! Draft sent via Mail Drop!`,
-                        'success'
-                    );
+                    showAlert('Draft sent via Mail Drop!', 'success');
                     handleBookmarkletRedirect();
                 })
                 .catch(err => {
                     hideLoading();
                     console.error('Mail Drop error:', err);
                     addToQueue(draftData);
-                    showAlert('Sync failed \u2014 draft queued for retry.', 'warning');
+                    showAlert('Sync failed — draft queued for retry.', 'warning');
                 });
         } else {
             addToQueue(draftData);
             showAlert('Draft saved locally. Add a Mail Drop address to sync to Drafts.', 'info');
         }
+    }
+
+    function sendDraftData(draftData, email) {
+        const addr = email || localStorage.getItem('mailDropAddress');
+        return fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: addr, ...draftData })
+        }).then(r => r.json().then(d => {
+            if (!r.ok) return Promise.reject(d.error || 'API Error');
+            return { success: true };
+        }));
     }
 
     // ── Bookmarklet redirect ──────────────────────────────────
@@ -473,13 +553,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Keyboard shortcuts ────────────────────────────────────
 
     document.addEventListener('keydown', e => {
-        // Shift+Cmd+N (Mac) / Shift+Ctrl+N (Win) — new tab
-        // (Cmd+N is reserved by browsers to open new windows; can't be prevented)
-        if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'n') {
+        // Cmd+N (Mac) or Ctrl+N (Win/Linux) → new tab
+        if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'n') {
             e.preventDefault();
             newTab();
             return;
         }
+
         if (e.shiftKey && e.ctrlKey && (e.key === 'Enter' || e.key === 'Return')) {
             e.preventDefault();
             captureForm?.dispatchEvent(new Event('submit', { cancelable: true }));
@@ -500,16 +580,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function showAlert(message, type) {
         const div = document.createElement('div');
-        div.className = `alert ${type}`;
-        div.innerHTML = message;
+        div.className = 'alert ' + type;
+        div.textContent = message;
         alertContainer.prepend(div);
-        if (type === 'success' || type === 'info') {
-            const delay = type === 'success' ? 6000 : 4000;
+        if (type === 'success') {
             setTimeout(() => {
                 div.style.transition = 'opacity 0.4s';
                 div.style.opacity    = '0';
                 setTimeout(() => div.remove(), 400);
-            }, delay);
+            }, 6000);
         }
     }
 
@@ -536,11 +615,10 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Preferences ───────────────────────────────────────────
 
     function savePreferences() {
-        const sel = document.getElementById('draft-syntax');
-        if (sel) localStorage.setItem('preferredSyntax', sel.value);
-        const loc = document.getElementById('draft-location');
-        if (loc) localStorage.setItem('useLocation', loc.checked);
+        localStorage.setItem('preferredSyntax', document.getElementById('draft-syntax').value);
+        localStorage.setItem('useLocation',     document.getElementById('draft-location').checked);
     }
+
     function loadPreferences() {
         const syntax = localStorage.getItem('preferredSyntax');
         if (syntax) {
@@ -560,15 +638,20 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const text = p.get('text');
         if (text) {
-            setEditorContent(decodeURIComponent(text));
+            const val = decodeURIComponent(text);
+            document.getElementById('draft-content').value = val;
+            if (window.__editor) window.__editor.setValue(val);
+            window.__resizeTextarea?.();
         } else {
             const url   = p.get('url');
             const title = p.get('title');
             const sel   = p.get('sel');
             if (url && title) {
-                let s = `[${title}](${url})`;
-                if (sel) s += `\n\n> ${sel}\n`;
-                setEditorContent(s);
+                let s = '[' + title + '](' + url + ')';
+                if (sel) s += '\n\n> ' + sel + '\n';
+                document.getElementById('draft-content').value = s;
+                if (window.__editor) window.__editor.setValue(s);
+                window.__resizeTextarea?.();
             }
         }
 
@@ -593,10 +676,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
 
         const redirect = p.get('redirect');
-        const urlParam = p.get('url');
-        if (redirect && urlParam) {
+        const url      = p.get('url');
+        if (redirect && url) {
             localStorage.setItem('captureRedirectType', redirect);
-            localStorage.setItem('captureRedirectUrl',  urlParam);
+            localStorage.setItem('captureRedirectUrl',  url);
         }
     }
 
@@ -609,7 +692,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 draftQueue = JSON.parse(saved);
                 if (draftQueue.length > 0) {
                     updateQueueIndicator();
-                    showAlert(`${draftQueue.length} draft(s) queued from a previous session.`, 'info');
+                    showAlert(draftQueue.length + ' draft(s) queued from a previous session.', 'info');
                 }
             }
         } catch { draftQueue = []; }
@@ -639,7 +722,7 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderDraftList() {
         const list = document.getElementById('draft-list');
         if (!list) return;
-        list.innerHTML = '';
+        list.textContent = '';
         draftQueue.forEach((draft, index) => {
             const el     = document.createElement('div');
             el.className = 'draft-item';
@@ -649,14 +732,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
             const titleSpan = document.createElement('span');
             titleSpan.className = 'draft-item-title';
-            titleSpan.textContent = `Draft ${index + 1}`;
+            titleSpan.textContent = 'Draft ' + (index + 1);
 
             const actions   = document.createElement('div');
             actions.className = 'draft-item-actions';
 
-            [[  'Submit', 'submit-draft-btn'],
-             [  'Edit',   'edit-draft-btn'  ],
-             ['\u00d7',   'remove-draft-btn']].forEach(([txt, cls]) => {
+            [['Submit', 'submit-draft-btn'],
+             ['Edit',   'edit-draft-btn'  ],
+             ['\u00d7', 'remove-draft-btn']].forEach(([txt, cls]) => {
                 const btn = document.createElement('button');
                 btn.type = 'button'; btn.className = cls;
                 btn.dataset.index = index; btn.textContent = txt;
@@ -701,20 +784,15 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function submitDraft(index) {
         if (index < 0 || index >= draftQueue.length) return;
-        if (!localStorage.getItem('mailDropAddress')) {
+        const email = localStorage.getItem('mailDropAddress');
+        if (!email) {
             showAlert('Add a Mail Drop address to submit queued drafts.', 'error'); return;
         }
-        fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftQueue[index] })
-            }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
-            .then(result => {
-                if (result?.success) {
-                    draftQueue.splice(index, 1);
-                    saveDraftQueue();
-                    showAlert('Draft submitted to Drafts.', 'success');
-                }
+        sendDraftData(draftQueue[index], email)
+            .then(() => {
+                draftQueue.splice(index, 1);
+                saveDraftQueue();
+                showAlert('Draft submitted to Drafts.', 'success');
             })
             .catch(err => {
                 console.error('Submit error:', err);
@@ -725,20 +803,22 @@ document.addEventListener('DOMContentLoaded', function () {
     function editDraft(index) {
         if (index < 0 || index >= draftQueue.length) return;
         const draft = draftQueue[index];
-        setEditorContent(draft.content);
+        document.getElementById('draft-content').value   = draft.content;
+        if (window.__editor) window.__editor.setValue(draft.content);
         setTagsFromString(draft.tags || '');
-        
-        
+        document.getElementById('draft-syntax').value    = draft.syntax || 'Markdown';
+        document.getElementById('draft-flagged').checked = !!draft.flagged;
         draftQueue.splice(index, 1);
         saveDraftQueue();
         focusEditor();
+        window.__resizeTextarea?.();
         saveCurrentTabContent();
         renderTabs();
     }
 
     function removeDraft(index) {
         if (index < 0 || index >= draftQueue.length) return;
-        if (confirm(`Remove draft ${index + 1} from queue?`)) {
+        if (confirm('Remove draft ' + (index + 1) + ' from queue?')) {
             draftQueue.splice(index, 1);
             saveDraftQueue();
         }
@@ -746,110 +826,65 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setupBeforeUnloadHandler() {
         window.addEventListener('beforeunload', e => {
-            saveCurrentTabContent(); // always persist before leaving
+            saveCurrentTabContent();
             if (draftQueue.length > 0) {
-                const msg = `You have ${draftQueue.length} queued draft(s) waiting to sync. Leave anyway?`;
+                const msg = 'You have ' + draftQueue.length + ' queued draft(s) waiting to sync. Leave anyway?';
                 e.preventDefault(); e.returnValue = msg; return msg;
             }
         });
     }
 
     function submitAllDrafts() {
-        if (!localStorage.getItem('mailDropAddress')) {
+        const email = localStorage.getItem('mailDropAddress');
+        if (!email) {
             showAlert('Add a Mail Drop address to send drafts to Drafts.', 'error'); return;
         }
-        // Collect: all tabs with content + any queued drafts
         saveCurrentTabContent();
         const tabDrafts = tabs
             .filter(t => t.content.trim())
             .map(t => ({
-                content: t.content.trim(), tags: t.tags
+                content: t.content.trim(),
+                tags:    t.tags,
+                syntax:  t.syntax,
+                flagged: t.flagged,
+                latitude: 0, longitude: 0,
+                attachments: []
             }));
         const allDrafts = [...tabDrafts, ...draftQueue];
         if (!allDrafts.length) { showAlert('No drafts to send.', 'info'); return; }
         showLoading();
         const next = (i = 0) => {
             if (i >= allDrafts.length) {
-                // Clear all submitted tabs and queue
                 tabs.forEach(t => { t.content = ''; t.tags = ''; t.flagged = false; });
                 saveTabs();
                 draftQueue = []; saveDraftQueue();
                 hideLoading();
                 renderTabs();
                 loadTabContent(activeTabId);
-                showAlert(`${allDrafts.length} draft(s) sent to Drafts.`, 'success');
+                showAlert(allDrafts.length + ' draft(s) sent to Drafts.', 'success');
                 handleBookmarkletRedirect(); return;
             }
-            fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...allDrafts[i] })
-            }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
+            sendDraftData(allDrafts[i], email)
                 .then(() => next(i + 1))
-                .catch(err => { hideLoading(); showAlert(`Error on draft ${i + 1}: ${err.message || err}`, 'error'); });
+                .catch(err => { hideLoading(); showAlert('Error on draft ' + (i + 1) + ': ' + (err.message || err), 'error'); });
         };
         next();
     }
 
-    function discardAllDrafts() {
-        if (!draftQueue.length) return;
-        if (confirm(`Discard all ${draftQueue.length} queued draft(s)?`)) {
-            draftQueue = []; saveDraftQueue();
-        }
-    }
-
-    // ── Tab bar drag-to-scroll ────────────────────────────────
-
-    function setupTabBarDragScroll() {
-        const bar = document.getElementById('tab-bar');
-        if (!bar) return;
-        let dragging = false, startX = 0, scrollStart = 0, moved = false;
-
-        bar.addEventListener('mousedown', e => {
-            if (e.button !== 0) return;
-            dragging   = true;
-            moved      = false;
-            startX     = e.pageX;
-            scrollStart = bar.scrollLeft;
-            bar.style.userSelect = 'none';
-        });
-
-        document.addEventListener('mousemove', e => {
-            if (!dragging) return;
-            const dx = e.pageX - startX;
-            if (Math.abs(dx) > 4) moved = true;
-            if (moved) bar.scrollLeft = scrollStart - dx;
-        });
-
-        document.addEventListener('mouseup', () => {
-            dragging = false;
-            bar.style.userSelect = '';
-        });
-
-        // Suppress click-on-tab after a drag
-        bar.addEventListener('click', e => {
-            if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
-        }, true);
-    }
-
-    // ── Clear all tabs ────────────────────────────────────────
-
     function clearAllTabs() {
-        if (tabs.length <= 1) return;
-        if (!confirm(`Close all ${tabs.length} tabs? Tabs with content will be queued.`)) return;
-        // Queue any tabs that have content
-        tabs.forEach(t => {
-            if (t.content.trim()) {
-                addToQueue({ content: t.content.trim(), tags: t.tags, syntax: t.syntax, flagged: t.flagged, latitude: 0, longitude: 0 });
-            }
-        });
+        if (!confirm('Clear all open drafts?')) return;
         tabs = [makeTab()];
         activeTabId = tabs[0].id;
         saveTabs();
         renderTabs();
         loadTabContent(activeTabId);
-        focusEditor();
-        if (draftQueue.length) showAlert('Tabs closed — drafts queued for sync.', 'info');
+    }
+
+    function discardAllDrafts() {
+        if (!draftQueue.length) return;
+        if (confirm('Discard all ' + draftQueue.length + ' queued draft(s)?')) {
+            draftQueue = []; saveDraftQueue();
+        }
     }
 
     // ── Global exports ────────────────────────────────────────
