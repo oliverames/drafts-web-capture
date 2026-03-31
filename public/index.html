@@ -117,38 +117,18 @@
 
     <!-- CloudKit token: set window.CLOUDKIT_API_TOKEN to override baked-in token -->
     <script src="config.js"></script>
-    <!-- Proxy: route CloudKit API calls through worker so origin restriction is satisfied -->
+    <!-- Register Service Worker proxy before CloudKit SDK loads.
+         SW intercepts api.apple-cloudkit.com at the network layer and
+         rewrites requests through the Cloudflare Worker, satisfying the
+         token's domain restriction. skipWaiting+clients.claim means the SW
+         controls this page immediately without a reload. -->
     <script>
-    (function () {
-        var PROXY = 'https://drafts-ck-proxy.oliverames.workers.dev';
-        var CK   = 'https://api.apple-cloudkit.com';
-
-        // Patch fetch (used by some CloudKit SDK builds)
-        var _fetch = window.fetch.bind(window);
-        window.fetch = function (resource, init) {
-            if (typeof resource === 'string' && resource.indexOf('api.apple-cloudkit.com') !== -1) {
-                resource = resource.replace(CK, PROXY);
-            } else if (resource instanceof Request && resource.url.indexOf('api.apple-cloudkit.com') !== -1) {
-                resource = new Request(resource.url.replace(CK, PROXY), resource);
-            }
-            return _fetch(resource, init);
-        };
-
-        // Patch XHR — CloudKit JS SDK v2 uses XMLHttpRequest.
-        // Lock with Object.defineProperty so the SDK cannot overwrite it.
-        var _open = XMLHttpRequest.prototype.open;
-        Object.defineProperty(XMLHttpRequest.prototype, 'open', {
-            value: function (method, url) {
-                if (typeof url === 'string' && url.indexOf('api.apple-cloudkit.com') !== -1) {
-                    url = url.replace(CK, PROXY);
-                }
-                return _open.apply(this, arguments);
-            },
-            writable: false,
-            configurable: false,
-            enumerable: true
-        });
-    })();
+    window.__swReady = ('serviceWorker' in navigator)
+        ? navigator.serviceWorker
+              .register('sw.js')
+              .then(reg => navigator.serviceWorker.ready)
+              .catch(() => Promise.resolve())
+        : Promise.resolve();
     </script>
     <!-- CloudKit JS SDK — fires 'cloudkitloaded' event when ready -->
     <script async src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
