@@ -1,5 +1,43 @@
 # Worklog
 
+## 2026-03-31 — Format bar, selection toolbar, desktop height, meta bar, shortcuts
+
+**What changed**: Major UI feature additions following user request, with three rounds of fresh-eyes auditing to find bugs introduced or missed along the way.
+
+New features:
+- **Formatting syntax bar** between editor and meta row: syntax selector left, context-aware format buttons middle (B/I/S/code/heading/blockquote/bullet + More dropdown), Write/Preview toggle right. Buttons change per syntax — Markdown family gets formatting buttons, Taskpaper gets @-tag buttons, Simple List gets bullet/checkbox, Plain Text gets nothing.
+- **Floating selection toolbar**: pill-shaped overlay appears above selected text in markdown syntaxes. Buttons: Bold, Italic, Strikethrough, Code, Link.
+- **Desktop editor height**: on load and resize (>=900px), editor min-height is calculated so the footer sits at the bottom of the viewport. Uses CSS custom property `--editor-min-h` overriding CM6's inline theme.
+- **Meta bar reorder**: Flag and Location moved to far left, Tags to their right, Attach button moved to right side alongside Clear/Create with secondary-button styling.
+- **Keyboard shortcuts**: changed from Shift+Ctrl to Shift+Meta (⇧⌘) across all 5 shortcuts.
+- **Top text margin**: set equal to left margin (22px) in textarea, CM6 content, and preview pane.
+
+Bugs found and fixed across three audit passes:
+- Double border between content-field and format-bar (content-field had border-bottom, format-bar had border-top — removed the latter).
+- Selection toolbar animation broken: `display: none → flex` prevents opacity/transform transitions. Fixed using `visibility: hidden/visible` with delayed transition on hide.
+- Selection toolbar not dismissing when clicking outside editor — added document `mousedown` listener.
+- `renderFormatButtons` not called on tab switch — `sel.value = x` doesn't fire `change` event; fixed by calling `renderFormatButtons(tab.syntax)` directly in `loadTabContent`.
+
+**Decisions made**:
+- Format bar uses white background (`--surface`) vs. meta row's light gray (`--surface-2`) to feel distinct without being jarring.
+- Selection toolbar uses `visibility` + `pointer-events` for show/hide instead of `display` so opacity/transform transitions animate correctly. The `visibility` delay trick: `transition: visibility 0s 0.12s` on hide so visibility changes only after the fade-out completes.
+- Desktop height uses `belowH = footerRect.bottom - cmRect.bottom` which is constant regardless of editor height (everything below the editor moves with it), enabling a single-pass calculation without resetting to 0.
+- CM6's inline theme uses `minHeight` inline style — needed `!important` on the CSS custom property rule to override it.
+- All DOM creation in format bar uses safe DOM methods (createElement/textContent/appendChild) — the security hook blocked innerHTML usage.
+- `fitEditorToViewport` called with `setTimeout(..., 250)` to give CM6 time to mount from esm.sh; DOMContentLoaded waits for module execution per spec, so 250ms should always be sufficient.
+
+**Left off at**: All requested features implemented and audited through three fresh-eyes passes. App is in good shape. Possible next directions:
+- Still open from previous: allow editing the Mail Drop address without losing queue
+- Still open from previous: PWA manifest / installable app experience
+- Still open from previous: Dark mode
+- New: the More dropdown could benefit from keyboard navigation (arrow keys)
+
+**Open questions**:
+- Still open: Should `clearAllTabs` queue tab content before clearing (for consistency with individual tab close)?
+- Still open: Add DOMPurify if the app ever becomes multi-user.
+
+---
+
 ## 2026-03-31 — Code quality passes, favicon fix, unofficial attribution
 
 **What changed**: Three rounds of code review and cleanup (automated agents + manual UltraThink passes), favicon regenerated with rounded corners baked in, unofficial attribution added throughout, README updated with full feature list.
