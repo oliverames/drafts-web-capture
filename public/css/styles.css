@@ -894,10 +894,19 @@ body {
 
 /* ── Responsive ──────────────────────────────────────────── */
 
+/* Mid-range: shrink tags max-width as space gets tighter */
+@media (max-width: 680px) {
+    .tags-field { max-width: 140px; }
+}
+
 @media (max-width: 560px) {
     .page-wrapper { padding: 0 12px 40px; }
     .form-meta-row { gap: 6px; }
-    .meta-left { gap: 2px; }
+    /* Allow meta-left to wrap on small screens — everything fits across two lines */
+    .meta-left { flex-wrap: wrap; gap: 2px; }
+    /* Tags takes full first row on narrow screens */
+    .tags-field { max-width: none; flex: 1 1 100%; }
+    .meta-right { gap: 6px; }
     .btn-sign-out { width: 100%; margin-top: 8px; }
     .footer-nav { flex-direction: column; gap: 6px; }
 }
