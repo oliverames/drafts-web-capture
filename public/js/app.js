@@ -67,7 +67,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('save-maildrop-btn')?.addEventListener('click', () => {
         const input = document.getElementById('maildrop-input');
-        if (input.value.includes('@drafts.io')) {
+        if (input.value.includes('@drafts.io') || input.value.includes('@maildrop.getdrafts.com')) {
             localStorage.setItem('mailDropAddress', input.value.trim());
             localStorage.removeItem('skipCloudKit');
             checkAuth();
@@ -221,15 +221,13 @@ document.addEventListener('DOMContentLoaded', function () {
 
         // Auto-send the draft if it has content and user is authenticated
         if (tab.content.trim()) {
-            const draftData = {
-                content: tab.content.trim(), tags: tab.tags
-            };
+            const draftData = { content: tab.content.trim(), tags: tab.tags, syntax: tab.syntax, flagged: tab.flagged, latitude: 0, longitude: 0 };
             const email = localStorage.getItem('mailDropAddress');
         if (email) {
                 fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), content: draftData.content, tags: draftData.tags })
+                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftData })
             }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
                     .then(() => showAlert('Closed tab sent to Drafts.', 'success'))
                     .catch(err => {
@@ -399,9 +397,12 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const content     = document.getElementById('draft-content').value;
         const tags        = document.getElementById('draft-tags').value;
-        
-        
-        
+        const sel         = document.getElementById('draft-syntax');
+        const syntax      = sel ? sel.value : 'Markdown';
+        const chk         = document.getElementById('draft-flagged');
+        const flagged     = chk ? chk.checked : false;
+        const locChk      = document.getElementById('draft-location');
+        const useLocation = locChk ? locChk.checked : false;
 
         if (!content || !content.trim()) {
             showAlert('Content is required.', 'error');
@@ -410,9 +411,18 @@ document.addEventListener('DOMContentLoaded', function () {
 
         savePreferences();
 
-        
+        let latitude = 0.0, longitude = 0.0;
+        if (useLocation && navigator.geolocation) {
+            try {
+                const pos = await new Promise((resolve, reject) =>
+                    navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+                );
+                latitude  = pos.coords.latitude;
+                longitude = pos.coords.longitude;
+            } catch { /* proceed without location */ }
+        }
 
-        const draftData = { content: content.trim(), tags };
+        const draftData = { content: content.trim(), tags, syntax, flagged, latitude, longitude };
 
         const email = localStorage.getItem('mailDropAddress');
         if (email) {
@@ -420,7 +430,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), content: draftData.content, tags: draftData.tags })
+                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftData })
             }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
                 .then(result => {
                     hideLoading();
@@ -697,7 +707,7 @@ document.addEventListener('DOMContentLoaded', function () {
         fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), content: draftQueue[index].content, tags: draftQueue[index].tags })
+                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...draftQueue[index] })
             }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
             .then(result => {
                 if (result?.success) {
@@ -773,7 +783,7 @@ document.addEventListener('DOMContentLoaded', function () {
             fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), content: allDrafts[i].content, tags: allDrafts[i].tags })
+                body: JSON.stringify({ email: localStorage.getItem('mailDropAddress'), ...allDrafts[i] })
             }).then(r => r.json().then(d => r.ok ? { success: true, draft: {} } : Promise.reject(d.error || 'API Error')))
                 .then(() => next(i + 1))
                 .catch(err => { hideLoading(); showAlert(`Error on draft ${i + 1}: ${err.message || err}`, 'error'); });
@@ -830,9 +840,7 @@ document.addEventListener('DOMContentLoaded', function () {
         // Queue any tabs that have content
         tabs.forEach(t => {
             if (t.content.trim()) {
-                addToQueue({
-                    content: t.content.trim(), tags: t.tags
-                });
+                addToQueue({ content: t.content.trim(), tags: t.tags, syntax: t.syntax, flagged: t.flagged, latitude: 0, longitude: 0 });
             }
         });
         tabs = [makeTab()];
