@@ -84,11 +84,15 @@ document.addEventListener('DOMContentLoaded', function () {
     // ── Auth ──────────────────────────────────────────────────
 
     function checkAuth() {
-        const email = localStorage.getItem('mailDropAddress');
-        const skip  = localStorage.getItem('skipCloudKit');
-        const setupSection = document.getElementById('setup-section');
-        if (!setupSection) return;
-        setupSection.style.display = (email || skip) ? 'none' : '';
+        const email          = localStorage.getItem('mailDropAddress');
+        const skip           = localStorage.getItem('skipCloudKit');
+        const setupSection   = document.getElementById('setup-section');
+        const captureSection = document.getElementById('capture-section');
+        const headerActions  = document.querySelector('.header-actions');
+        const hasAuth        = !!(email || skip);
+        if (setupSection)   setupSection.style.display   = hasAuth ? 'none' : '';
+        if (captureSection) captureSection.style.display = hasAuth ? '' : 'none';
+        if (headerActions)  headerActions.style.visibility = hasAuth ? '' : 'hidden';
     }
 
     // ── Tabs ─────────────────────────────────────────────────
