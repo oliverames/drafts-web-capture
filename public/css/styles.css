@@ -336,14 +336,7 @@ body {
     background: var(--surface);
 }
 
-/* ── Editor header (Write / Preview toggle) ──────────────── */
-
-.editor-header {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 8px 16px 0;
-}
+/* ── Editor toggle (Write / Preview) — used in format bar ─── */
 
 .editor-toggle {
     display: flex;
@@ -370,6 +363,248 @@ body {
     font-weight: 600;
 }
 
+/* ── Formatting syntax bar ────────────────────────────────── */
+
+.format-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 14px 5px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--divider);
+    min-height: 36px;
+}
+
+.format-bar-left {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+.format-bar-mid {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.format-bar-right {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Syntax select in format bar */
+.format-bar-left #draft-syntax {
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.8rem;
+    font-family: inherit;
+    color: var(--ink-3);
+    cursor: pointer;
+    padding: 2px 0;
+    -webkit-appearance: auto;
+    appearance: auto;
+    max-width: 130px;
+}
+
+/* Format buttons container */
+.fmt-btns {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+    flex-wrap: nowrap;
+    overflow: hidden;
+}
+
+.fmt-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 24px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    color: var(--ink-3);
+    font-size: 0.8rem;
+    font-family: inherit;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s, color 0.1s;
+    flex-shrink: 0;
+}
+
+.fmt-btn:hover {
+    background: rgba(0,0,0,0.06);
+    color: var(--ink);
+}
+
+.fmt-btn b { font-weight: 700; }
+.fmt-btn i { font-style: italic; }
+.fmt-btn s { text-decoration: line-through; }
+.fmt-btn code { font-family: 'SF Mono', Menlo, monospace; font-size: 0.78rem; }
+
+.fmt-sep {
+    width: 1px;
+    height: 14px;
+    background: var(--divider);
+    flex-shrink: 0;
+    margin: 0 3px;
+}
+
+/* More dropdown */
+.fmt-more-wrap {
+    position: relative;
+    flex-shrink: 0;
+}
+
+.fmt-more-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    height: 24px;
+    padding: 0 6px;
+    border: none;
+    background: transparent;
+    color: var(--ink-4);
+    font-size: 0.78rem;
+    font-family: inherit;
+    border-radius: 5px;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background 0.1s, color 0.1s;
+}
+
+.fmt-more-btn:hover {
+    background: rgba(0,0,0,0.06);
+    color: var(--ink);
+}
+
+.fmt-more-menu {
+    display: none;
+    position: absolute;
+    top: calc(100% + 4px);
+    right: 0;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 9px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12), 0 1px 4px rgba(0,0,0,0.06);
+    z-index: 200;
+    min-width: 160px;
+    padding: 4px;
+    overflow: hidden;
+}
+
+.fmt-more-menu.open { display: block; }
+
+.fmt-more-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 6px 10px;
+    border: none;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 0.82rem;
+    font-family: inherit;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
+}
+
+.fmt-more-item:hover {
+    background: var(--blue-dim);
+    color: var(--blue);
+}
+
+.fmt-more-item .fmt-more-key {
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.75rem;
+    color: var(--ink-5);
+    flex-shrink: 0;
+    min-width: 32px;
+}
+
+/* Preview mode: hide formatting buttons */
+.format-bar.preview-mode .fmt-btns,
+.format-bar.preview-mode .fmt-more-wrap {
+    opacity: 0.35;
+    pointer-events: none;
+}
+
+/* ── Selection toolbar (floating) ────────────────────────── */
+
+.selection-toolbar {
+    position: fixed;
+    z-index: 500;
+    display: flex;
+    visibility: hidden;
+    pointer-events: none;
+    align-items: center;
+    gap: 3px;
+    padding: 5px 6px;
+    background: var(--surface);
+    border: 1px solid var(--divider);
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.13), 0 4px 20px rgba(0,0,0,0.08);
+    user-select: none;
+    transform: translateY(-4px);
+    opacity: 0;
+    /* On hide: fade out first, then make invisible */
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s 0.12s;
+}
+
+.selection-toolbar.visible {
+    visibility: visible;
+    pointer-events: auto;
+    opacity: 1;
+    transform: translateY(0);
+    /* On show: make visible immediately, then fade in */
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0s;
+}
+
+.sel-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 4px 8px;
+    background: var(--surface-2);
+    border: none;
+    border-radius: 6px;
+    color: var(--ink-3);
+    font-size: 0.8rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+    white-space: nowrap;
+    line-height: 1.4;
+}
+
+.sel-btn:hover {
+    background: var(--blue-dim);
+    color: var(--blue);
+}
+
+.sel-btn b { font-weight: 700; }
+.sel-btn i { font-style: italic; }
+.sel-btn s { text-decoration: line-through; }
+.sel-btn.sel-code { font-family: 'SF Mono', Menlo, monospace; font-size: 0.75rem; }
+
+.sel-sep {
+    width: 1px;
+    height: 16px;
+    background: var(--divider);
+    flex-shrink: 0;
+    margin: 0 1px;
+}
+
 /* Content textarea — hero of the form */
 .content-field {
     border-bottom: 1px solid var(--divider);
@@ -378,7 +613,7 @@ body {
 #draft-content {
     display: block;
     width: 100%;
-    padding: 12px 22px 16px;
+    padding: 22px 22px 16px;
     border: none;
     outline: none;
     resize: none;
@@ -387,8 +622,13 @@ body {
     color: var(--ink);
     background: transparent;
     line-height: 1.65;
-    min-height: 260px;
+    min-height: var(--editor-min-h, 260px);
     overflow: hidden; /* height managed by pretext */
+}
+
+/* Desktop editor height fills viewport (set via JS) */
+#cm-editor-root .cm-content {
+    min-height: var(--editor-min-h, 220px) !important;
 }
 
 #draft-content::placeholder {
@@ -399,7 +639,7 @@ body {
 /* ── Markdown preview pane ───────────────────────────────── */
 
 .preview-pane {
-    padding: 12px 22px 16px;
+    padding: 22px 22px 16px;
     min-height: 260px;
     font-size: 0.96rem;
     line-height: 1.7;
@@ -471,7 +711,7 @@ body {
 }
 .preview-pane tr:nth-child(even) td { background: var(--surface-2); }
 
-/* Meta bar — tags, syntax, flags, buttons */
+/* Meta bar — flag, location, tags | attach, clear, create */
 .form-meta-row {
     display: flex;
     align-items: center;
@@ -496,6 +736,7 @@ body {
     align-items: center;
     gap: 7px;
     flex-shrink: 0;
+    position: relative;
 }
 
 /* Individual meta fields */
@@ -607,7 +848,7 @@ body {
 }
 .tag-chip-remove:hover { opacity: 1; background: rgba(23,57,115,0.15); }
 
-/* Syntax select */
+/* Syntax select (base — overridden by .format-bar-left context) */
 #draft-syntax {
     border: none;
     outline: none;
@@ -621,7 +862,7 @@ body {
     appearance: auto;
 }
 
-/* Flagged checkbox label */
+/* Flagged / location checkbox labels + attach label */
 .flagged-field,
 .location-field,
 .attach-field {
@@ -633,11 +874,32 @@ body {
     font-size: 0.82rem;
     gap: 4px;
 }
+
+/* Attach in meta-right looks like a secondary button */
+.meta-right .attach-field {
+    border: 1px solid var(--divider);
+    background: var(--surface-2);
+    color: var(--ink-3);
+    font-size: 0.78rem;
+    font-weight: 500;
+    padding: 5px 12px;
+    border-radius: var(--radius-sm);
+}
 .flagged-field:hover,
-.location-field:hover,
-.attach-field:hover {
+.location-field:hover {
     background: rgba(0,0,0,0.05);
     color: var(--ink-2);
+}
+
+.attach-field:hover {
+    background: rgba(0,0,0,0.04);
+    color: var(--ink-2);
+}
+
+.meta-right .attach-field:hover {
+    border-color: var(--ink-5);
+    color: var(--ink-2);
+    background: rgba(0,0,0,0.03);
 }
 .flagged-field input,
 .location-field input {
@@ -662,6 +924,12 @@ body {
 /* Attach field active state */
 .attach-field.has-files {
     background: var(--blue-dim);
+    color: var(--blue);
+}
+
+.meta-right .attach-field.has-files {
+    background: var(--blue-dim);
+    border-color: rgba(23,57,115,.25);
     color: var(--blue);
 }
 
@@ -941,21 +1209,25 @@ body.setup-mode .editor-only { display: none !important; }
 
 /* ── Responsive ──────────────────────────────────────────── */
 
-/* Mid-range: shrink tags max-width as space gets tighter */
+/* Format bar — collapse on narrow screens */
 @media (max-width: 680px) {
     .tags-field { max-width: 140px; }
+    .fmt-btns { overflow-x: auto; scrollbar-width: none; }
+    .fmt-btns::-webkit-scrollbar { display: none; }
 }
 
 @media (max-width: 560px) {
     .page-wrapper { padding: 0 12px 40px; }
     .form-meta-row { gap: 6px; }
-    /* Allow meta-left to wrap on small screens — everything fits across two lines */
+    /* Allow meta-left to wrap on small screens */
     .meta-left { flex-wrap: wrap; gap: 2px; }
-    /* Tags takes full first row on narrow screens */
     .tags-field { max-width: none; flex: 1 1 100%; }
     .meta-right { gap: 6px; }
     .btn-sign-out { width: 100%; margin-top: 8px; }
     .footer-nav { flex-direction: column; gap: 6px; }
+    /* Compress format bar */
+    .format-bar { gap: 6px; padding: 4px 10px; }
+    .format-bar-left #draft-syntax { max-width: 90px; font-size: 0.75rem; }
 }
 
 /* iPhone-width: stack meta row as two separate rows */
@@ -981,4 +1253,6 @@ body.setup-mode .editor-only { display: none !important; }
         padding-top: 8px;
         gap: 7px;
     }
+    /* Format bar: hide more-menu labels on tiny screens */
+    .fmt-more-btn .fmt-more-label { display: none; }
 }
