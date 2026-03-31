@@ -42,7 +42,8 @@
                 </div>
                 <h1 class="sign-in-title">Drafts Capture</h1>
                 <p class="sign-in-description">Sign in with your Apple ID to sync drafts directly to your Drafts library on iPhone, iPad, and Mac.</p>
-                <div id="apple-sign-in-button" class="apple-sign-in"></div>
+                <!-- CloudKit SDK injects the official Apple button here -->
+                <div id="apple-sign-in-button" class="apple-sign-in-target"></div>
                 <div class="sign-in-divider"><span>or</span></div>
                 <button type="button" id="use-local-btn" class="btn-use-local">Continue without signing in</button>
             </div>

@@ -27,7 +27,11 @@
             CloudKit.configure({
                 containers: [{
                     containerIdentifier: 'iCloud.com.agiletortoise.Drafts5',
-                    apiTokenAuth: { apiToken: TOKEN, persist: true },
+                    apiTokenAuth: {
+                        apiToken: TOKEN,
+                        persist: true,
+                        signInButton: { id: 'apple-sign-in-button', style: 'black' }
+                    },
                     environment: ENV
                 }]
             });

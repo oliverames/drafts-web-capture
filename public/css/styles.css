@@ -47,9 +47,9 @@ body {
 /* ── Page layout ─────────────────────────────────────────── */
 
 .page-wrapper {
-    max-width: 640px;
+    max-width: 680px;
     margin: 0 auto;
-    padding: 0 18px 60px;
+    padding: 0 20px 72px;
 }
 
 /* ── Header ──────────────────────────────────────────────── */
@@ -124,63 +124,53 @@ body {
 /* ── Sign-in card ────────────────────────────────────────── */
 
 .sign-in-card {
-    padding: 48px 32px 40px;
+    padding: 56px 40px 48px;
     text-align: center;
 }
 
 .sign-in-icon {
-    margin: 0 auto 16px;
-    width: 52px;
-    height: 52px;
-    background: linear-gradient(145deg, #f0f6ff, #e8f0fc);
-    border-radius: 14px;
+    margin: 0 auto 20px;
+    width: 56px;
+    height: 56px;
+    background: #f0f6ff;
+    border-radius: 15px;
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 1px 4px rgba(74,144,217,.18);
+    box-shadow: 0 1px 3px rgba(74,144,217,.15), 0 0 0 1px rgba(74,144,217,.1);
 }
 
 .sign-in-title {
-    font-size: 1.25rem;
+    font-size: 1.35rem;
     font-weight: 600;
     color: var(--ink);
-    letter-spacing: -0.02em;
-    margin-bottom: 8px;
+    letter-spacing: -0.025em;
+    margin-bottom: 10px;
 }
 
 .sign-in-description {
-    font-size: 0.875rem;
+    font-size: 0.9rem;
     color: var(--ink-3);
-    line-height: 1.6;
-    margin-bottom: 28px;
-    max-width: 320px;
+    line-height: 1.65;
+    margin-bottom: 32px;
+    max-width: 300px;
     margin-left: auto;
     margin-right: auto;
 }
 
-.apple-sign-in {
+/* CloudKit SDK renders Apple's official button into this container */
+.apple-sign-in-target {
     display: flex;
     justify-content: center;
     margin-bottom: 4px;
+    min-height: 44px;
 }
 
-.apple-sign-in button {
-    background: var(--ink);
-    color: #fff;
-    border: none;
-    padding: 11px 28px;
-    border-radius: 10px;
-    font-size: 0.9rem;
-    font-weight: 600;
-    font-family: inherit;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    letter-spacing: -0.01em;
-    transition: background 0.12s;
+/* Style the button the SDK injects */
+.apple-sign-in-target > * {
+    border-radius: 10px !important;
+    overflow: hidden;
 }
-.apple-sign-in button:hover { background: #3a3a3c; }
 
 .sign-in-divider {
     display: flex;
@@ -222,7 +212,7 @@ body {
 
 /* Content textarea — hero of the form */
 .content-field {
-    padding: 16px 18px 12px;
+    padding: 20px 22px 14px;
     border-bottom: 1px solid var(--divider);
 }
 
