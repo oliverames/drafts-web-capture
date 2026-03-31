@@ -85,6 +85,12 @@ body {
     letter-spacing: -0.01em;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
 .get-drafts-link {
     font-size: 0.8rem;
     font-weight: 500;
@@ -93,6 +99,21 @@ body {
     transition: color 0.12s;
 }
 .get-drafts-link:hover { color: var(--ink-2); }
+
+.btn-send-all {
+    background: var(--blue);
+    border: none;
+    color: #fff;
+    padding: 5px 13px;
+    border-radius: 7px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.12s;
+    box-shadow: 0 1px 3px rgba(74,144,217,.28);
+}
+.btn-send-all:hover { background: var(--blue-hover); }
 
 /* ── Alerts ──────────────────────────────────────────────── */
 
@@ -239,14 +260,125 @@ body {
 
 .capture-card { padding: 0; }
 
+/* ── Tab bar ─────────────────────────────────────────────── */
+
+.tab-bar {
+    display: flex;
+    align-items: stretch;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--divider);
+    padding: 0 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    min-height: 34px;
+}
+.tab-bar::-webkit-scrollbar { display: none; }
+
+.tab-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 0 10px;
+    border: none;
+    background: transparent;
+    color: var(--ink-4);
+    font-size: 0.77rem;
+    font-family: inherit;
+    cursor: pointer;
+    white-space: nowrap;
+    border-bottom: 2px solid transparent;
+    transition: color 0.1s, border-color 0.1s;
+    max-width: 160px;
+}
+.tab-item:hover { color: var(--ink-2); }
+.tab-item.active {
+    color: var(--ink);
+    font-weight: 500;
+    border-bottom-color: var(--blue);
+}
+
+.tab-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: inherit;
+}
+
+.tab-close {
+    width: 14px;
+    height: 14px;
+    border: none;
+    background: transparent;
+    color: var(--ink-5);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    padding: 0;
+    transition: background 0.1s, color 0.1s;
+}
+.tab-close:hover { background: rgba(0,0,0,0.08); color: var(--ink-2); }
+
+.tab-new-btn {
+    flex-shrink: 0;
+    border: none;
+    background: transparent;
+    color: var(--ink-4);
+    font-size: 18px;
+    line-height: 1;
+    padding: 0 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+    transition: color 0.1s;
+}
+.tab-new-btn:hover { color: var(--blue); }
+
+/* ── Editor header (Write / Preview toggle) ──────────────── */
+
+.editor-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 16px 0;
+}
+
+.editor-toggle {
+    display: flex;
+    border: 1px solid var(--divider);
+    border-radius: 7px;
+    overflow: hidden;
+}
+
+.view-btn {
+    background: transparent;
+    border: none;
+    color: var(--ink-4);
+    padding: 3px 10px;
+    font-size: 0.75rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.1s, color 0.1s;
+}
+.view-btn + .view-btn { border-left: 1px solid var(--divider); }
+.view-btn.active {
+    background: var(--blue);
+    color: #fff;
+}
+
 /* Content textarea — hero of the form */
 .content-field {
-    padding: 20px 22px 14px;
     border-bottom: 1px solid var(--divider);
 }
 
 #draft-content {
+    display: block;
     width: 100%;
+    padding: 12px 22px 16px;
     border: none;
     outline: none;
     resize: none;
@@ -256,14 +388,62 @@ body {
     background: transparent;
     line-height: 1.65;
     min-height: 260px;
-    /* height will be managed by pretext; overflow hidden prevents scrollbar flash */
-    overflow: hidden;
+    overflow: hidden; /* height managed by pretext */
 }
 
 #draft-content::placeholder {
     color: var(--ink-6);
     font-weight: 400;
 }
+
+/* ── Markdown preview pane ───────────────────────────────── */
+
+.preview-pane {
+    padding: 12px 22px 16px;
+    min-height: 260px;
+    font-size: 0.96rem;
+    line-height: 1.7;
+    color: var(--ink);
+    overflow-wrap: break-word;
+}
+.preview-pane h1, .preview-pane h2, .preview-pane h3,
+.preview-pane h4, .preview-pane h5, .preview-pane h6 {
+    font-weight: 600; letter-spacing: -0.02em; margin: 1em 0 0.35em;
+}
+.preview-pane h1 { font-size: 1.4em; }
+.preview-pane h2 { font-size: 1.15em; }
+.preview-pane h3 { font-size: 1em; }
+.preview-pane p  { margin: 0.55em 0; }
+.preview-pane code {
+    background: var(--surface-2);
+    border: 1px solid var(--divider);
+    border-radius: 4px;
+    padding: 0.1em 0.35em;
+    font-family: 'SF Mono', Menlo, monospace;
+    font-size: 0.87em;
+}
+.preview-pane pre {
+    background: var(--surface-2);
+    border: 1px solid var(--divider);
+    border-radius: 8px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    margin: 0.8em 0;
+}
+.preview-pane pre code { background: none; border: none; padding: 0; }
+.preview-pane blockquote {
+    border-left: 3px solid var(--blue);
+    padding-left: 14px;
+    color: var(--ink-3);
+    margin: 0.55em 0;
+}
+.preview-pane ul, .preview-pane ol { padding-left: 1.5em; margin: 0.4em 0; }
+.preview-pane li { margin: 0.2em 0; }
+.preview-pane a { color: var(--blue); text-decoration: none; }
+.preview-pane a:hover { text-decoration: underline; }
+.preview-pane hr { border: none; border-top: 1px solid var(--divider); margin: 1.2em 0; }
+.preview-pane strong { font-weight: 600; }
+.preview-pane em { font-style: italic; }
 
 /* Meta bar — tags, syntax, flags, buttons */
 .form-meta-row {
@@ -305,25 +485,69 @@ body {
     opacity: 0.7;
 }
 
-/* Tags */
+/* Tags chip area */
 .tags-field {
-    flex: 1;
-    min-width: 100px;
-    max-width: 200px;
+    flex: 1 1 auto;
+    min-width: 60px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 3px;
 }
 
-#draft-tags {
+.tags-area {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 3px;
     flex: 1;
+    min-width: 0;
+}
+
+#tags-input {
+    flex: 1;
+    min-width: 60px;
     border: none;
     outline: none;
     background: transparent;
     font-size: 0.82rem;
     font-family: inherit;
     color: var(--ink-2);
-    min-width: 0;
     padding: 0;
 }
-#draft-tags::placeholder { color: var(--ink-5); }
+#tags-input::placeholder { color: var(--ink-5); }
+
+.tag-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    background: var(--blue-dim);
+    color: var(--blue);
+    border-radius: 20px;
+    padding: 1px 3px 1px 7px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    white-space: nowrap;
+    line-height: 1.5;
+}
+
+.tag-chip-remove {
+    width: 15px;
+    height: 15px;
+    border: none;
+    background: transparent;
+    color: var(--blue);
+    font-size: 13px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    padding: 0;
+    opacity: 0.55;
+    transition: opacity 0.1s, background 0.1s;
+}
+.tag-chip-remove:hover { opacity: 1; background: rgba(74,144,217,0.2); }
 
 /* Syntax select */
 .syntax-field { }

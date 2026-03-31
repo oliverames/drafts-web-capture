@@ -24,7 +24,10 @@
                 <span class="logo-brand">Drafts</span>
                 <span class="logo-suffix">Capture</span>
             </a>
-            <a href="https://getdrafts.com" class="get-drafts-link" target="_blank" rel="noopener">Get Drafts &#x2192;</a>
+            <div class="header-actions">
+                <button type="button" id="send-all-btn" class="btn-send-all" style="display:none;" onclick="window.submitAllDrafts?.()">Send All</button>
+                <a href="https://getdrafts.com" class="get-drafts-link" target="_blank" rel="noopener">Get Drafts &#x2192;</a>
+            </div>
         </header>
 
         <main>
@@ -57,9 +60,21 @@
 
             <!-- Capture form -->
             <div class="card capture-card" id="capture-section">
+
+                <!-- Tab bar -->
+                <div class="tab-bar" id="tab-bar">
+                    <button type="button" class="tab-new-btn" id="tab-new-btn" title="New draft">+</button>
+                </div>
+
                 <form id="capture-form" autocomplete="off">
 
                     <div class="content-field">
+                        <div class="editor-header">
+                            <div class="editor-toggle" role="group" aria-label="Editor view">
+                                <button type="button" class="view-btn active" id="view-write">Write</button>
+                                <button type="button" class="view-btn" id="view-preview">Preview</button>
+                            </div>
+                        </div>
                         <textarea
                             id="draft-content"
                             name="content"
@@ -67,16 +82,22 @@
                             spellcheck="true"
                             rows="10"
                         ></textarea>
+                        <div id="preview-pane" class="preview-pane" style="display:none;"></div>
                     </div>
 
                     <div class="form-meta-row">
                         <div class="meta-left">
+                            <!-- Tag chip input -->
                             <div class="meta-field tags-field">
                                 <svg class="meta-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" aria-hidden="true">
                                     <path d="M2 4a2 2 0 012-2h4.586a1 1 0 01.707.293l5.414 5.414a1 1 0 010 1.414l-4.586 4.586a1 1 0 01-1.414 0L3.293 8.293A1 1 0 013 7.586V4z" stroke="currentColor" stroke-width="1.3" stroke-linejoin="round"/>
                                     <circle cx="5.5" cy="5.5" r="1" fill="currentColor"/>
                                 </svg>
-                                <input type="text" id="draft-tags" name="tags" placeholder="tags, comma-separated" spellcheck="false">
+                                <div class="tags-area" id="tags-area">
+                                    <!-- chips injected by JS -->
+                                    <input type="text" id="tags-input" placeholder="Add tag…" spellcheck="false" autocomplete="off">
+                                </div>
+                                <input type="hidden" id="draft-tags" name="tags">
                             </div>
                             <div class="meta-field syntax-field">
                                 <select id="draft-syntax" name="syntax">
@@ -168,6 +189,7 @@
         : Promise.resolve();
     </script>
     <script async src="https://cdn.apple-cloudkit.com/ck/2/cloudkit.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked@9/marked.min.js"></script>
     <script src="js/cloudkit.js"></script>
     <script src="js/app.js"></script>
     <!-- Pretext: accurate textarea auto-sizing without DOM reflow -->
