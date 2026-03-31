@@ -350,7 +350,6 @@ document.addEventListener('DOMContentLoaded', function () {
             rm.textContent = '\u00d7';
             rm.addEventListener('click', () => {
                 tagList.splice(i, 1);
-                syncTagsHidden();
                 renderChips();
                 saveCurrentTabContent();
             });

@@ -93,14 +93,6 @@ body {
     gap: 10px;
 }
 
-.get-drafts-link {
-    font-size: 0.8rem;
-    font-weight: 500;
-    color: var(--ink-4);
-    text-decoration: none;
-    transition: color 0.12s;
-}
-.get-drafts-link:hover { color: var(--ink-2); }
 
 .btn-send-all,
 .btn-clear-all-tabs {
@@ -616,8 +608,6 @@ body {
 .tag-chip-remove:hover { opacity: 1; background: rgba(23,57,115,0.15); }
 
 /* Syntax select */
-.syntax-field { }
-
 #draft-syntax {
     border: none;
     outline: none;

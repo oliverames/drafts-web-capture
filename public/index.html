@@ -18,7 +18,7 @@
 
         <header class="site-header">
             <a class="logo" href="/">
-                <img src="img/drafts-icon.png" class="logo-icon" width="22" height="22" alt="Drafts" style="border-radius:5px;flex-shrink:0;">
+                <img src="img/drafts-icon.png" class="logo-icon" width="22" height="22" alt="Drafts">
                 <span class="logo-brand">Drafts</span>
                 <span class="logo-suffix">Capture</span>
             </a>
@@ -138,8 +138,8 @@
                 <div class="queue-header">
                     <span class="queue-title">Queued Drafts (<span id="queue-count">0</span>)</span>
                     <div class="queue-actions">
-                        <button type="button" class="btn-submit-all" onclick="submitAllDrafts()">Submit All</button>
-                        <button type="button" class="btn-discard-all" onclick="discardAllDrafts()">Discard All</button>
+                        <button type="button" class="btn-submit-all" onclick="window.submitAllDrafts?.()">Submit All</button>
+                        <button type="button" class="btn-discard-all" onclick="window.discardAllDrafts?.()">Discard All</button>
                     </div>
                 </div>
                 <div id="draft-list" class="draft-list"></div>
