@@ -35,17 +35,16 @@ document.addEventListener('DOMContentLoaded', function () {
         saveTimer = setTimeout(() => {
             saveCurrentTabContent();
             // Update only the active tab's label — no need to rebuild all tabs
-            const activeEl = document.querySelector('#tab-scroll .tab-item.active');
+            const hasEmail  = !!localStorage.getItem('mailDropAddress');
+            const activeEl  = document.querySelector('#tab-scroll .tab-item.active');
             const activeTab = tabs.find(t => t.id === activeTabId);
             if (activeEl && activeTab) {
                 const lbl = activeEl.querySelector('.tab-label');
                 if (lbl) lbl.textContent = tabTitle(activeTab);
-                const hasEmail = !!localStorage.getItem('mailDropAddress');
                 activeEl.classList.toggle('local-only', !!(activeTab.content.trim() && !hasEmail));
             }
             const sendAllBtn = document.getElementById('send-all-btn');
             if (sendAllBtn) {
-                const hasEmail = !!localStorage.getItem('mailDropAddress');
                 sendAllBtn.disabled = !(tabs.filter(t => t.content.trim()).length > 1 && hasEmail);
             }
         }, 400);
@@ -296,10 +295,9 @@ document.addEventListener('DOMContentLoaded', function () {
     function setupTabDragScroll() {
         const scrollEl = document.getElementById('tab-scroll');
         if (!scrollEl) return;
-        let isDown = false, startX, scrollLeft;
+        let startX, scrollLeft;
 
         function onMouseUp() {
-            isDown = false;
             scrollEl.classList.remove('dragging');
             document.removeEventListener('mouseup', onMouseUp);
             document.removeEventListener('mousemove', onMouseMove);
@@ -312,7 +310,6 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         scrollEl.addEventListener('mousedown', e => {
             if (e.target.closest('.tab-close')) return;
-            isDown = true;
             scrollEl.classList.add('dragging');
             startX = e.pageX - scrollEl.getBoundingClientRect().left;
             scrollLeft = scrollEl.scrollLeft;
@@ -575,12 +572,10 @@ document.addEventListener('DOMContentLoaded', function () {
             sendDraftData(draftData, email)
                 .then(() => {
                     hideLoading();
-                    // Clear the current tab content
                     const tab = tabs.find(t => t.id === activeTabId);
                     if (tab) { tab.content = ''; tab.tags = ''; tab.flagged = false; }
                     saveTabs();
                     clearForm();
-                    renderTabs();
                     showAlert('Draft sent via Mail Drop!', 'success');
                     handleBookmarkletRedirect();
                 })
