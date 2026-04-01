@@ -11,7 +11,8 @@
 <p align="center">
   <code>Zero Backend</code> &bull;
   <code>Mail Drop Sync</code> &bull;
-  <code>Offline-First</code>
+  <code>Offline-First</code> &bull;
+  <code>Installable PWA</code>
 </p>
 
 <p align="center">
@@ -51,6 +52,8 @@ npx serve public
 
 - **Mail Drop Sync:** Writes directly to the Drafts app via your secure Mail Drop address.
 - **Offline Queue:** Continue capturing even without an internet connection. Drafts are queued in local storage and submitted when you come back online.
+- **Installable PWA:** Add to Home Screen on iOS/Android or install via desktop browsers. App shell is precached for instant loads and full offline access.
+- **Dark Mode:** Follows your system preference automatically, with a manual toggle in the footer. Preference is remembered across sessions.
 - **Rich Editor:** Powered by CodeMirror 6 with full Markdown syntax highlighting.
 - **Write / Preview Toggle:** Switch between writing and a live rendered preview. Supports Markdown, MultiMarkdown, and GitHub Markdown; Plain Text, Taskpaper, and Simple List render as plain text.
 - **Multi-Tab Workspace:** Open multiple drafts side-by-side with horizontal tab drag-to-scroll.
@@ -65,6 +68,7 @@ npx serve public
 | **Hosting** | GitHub Pages | Auto-deployed on push to `main` via Actions |
 | **Editor** | CodeMirror 6 | Provides Markdown highlighting and text formatting |
 | **Transport** | Cloudflare Worker | `drafts-ck-proxy.oliverames.workers.dev` accepts the payload and uses the Resend API to email the Mail Drop address |
+| **Offline** | Service Worker | Cache-first app shell; assets precached on install, stale caches purged on activate |
 
 ### The Email Proxy
 
