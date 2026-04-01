@@ -42,7 +42,7 @@ body {
     font-size: 14px;
     background: var(--bg);
     color: var(--ink);
-    min-height: 100vh;
+    min-height: 100dvh;
     line-height: 1.5;
 }
 
@@ -887,7 +887,7 @@ body {
 }
 .flagged-field:hover,
 .location-field:hover {
-    background: rgba(0,0,0,0.05);
+    background: rgba(0,0,0,0.07);
     color: var(--ink-2);
 }
 
@@ -1122,7 +1122,7 @@ body {
 
 .help-link {
     font-size: 0.82rem;
-    color: var(--ink-4);
+    color: var(--ink-3);
     text-decoration: none;
     transition: color 0.12s;
 }
@@ -1131,7 +1131,7 @@ body {
 .btn-sign-out {
     background: none;
     border: none;
-    color: var(--ink-4);
+    color: var(--ink-3);
     padding: 0;
     font-size: 0.82rem;
     font-family: inherit;
@@ -1225,6 +1225,8 @@ body.setup-mode .editor-only { display: none !important; }
     .meta-right { gap: 6px; }
     .btn-sign-out { width: 100%; margin-top: 8px; }
     .footer-nav { flex-direction: column; gap: 6px; }
+    /* Separators become orphaned dots when nav stacks vertically */
+    .footer-sep { display: none; }
     /* Compress format bar */
     .format-bar { gap: 6px; padding: 4px 10px; }
     .format-bar-left #draft-syntax { max-width: 90px; font-size: 0.75rem; }
@@ -1255,4 +1257,159 @@ body.setup-mode .editor-only { display: none !important; }
     }
     /* Format bar: hide more-menu labels on tiny screens */
     .fmt-more-btn .fmt-more-label { display: none; }
+}
+
+/* ── Dark mode ───────────────────────────────────────────── */
+/* Activated by html.dark class (set on load from localStorage or system pref) */
+
+html.dark {
+    --blue:       #0a84ff;
+    --blue-dim:   rgba(10, 132, 255, 0.2);
+    --blue-hover: #3a9eff;
+    --orange:     #ff9f0a;
+    --orange-dim: rgba(255, 159, 10, 0.18);
+    --ink:        #f2f2f7;
+    --ink-2:      #d1d1d6;
+    --ink-3:      #aeaeb2;
+    --ink-4:      #8e8e93;
+    --ink-5:      #636366;
+    --ink-6:      #5c5c60;
+    --divider:    #38383a;
+    --bg:         #000000;
+    --surface:    #1c1c1e;
+    --surface-2:  #2c2c2e;
+    --shadow-card:
+        0 0 0 0.5px rgba(255,255,255,0.07),
+        0 2px 8px  rgba(0,0,0,0.4),
+        0 8px 24px rgba(0,0,0,0.3);
+}
+
+/* Alert text colors are dark-on-dark without override */
+html.dark .alert.success { color: #32d74b; background: rgba(50,215,75,.12);   border-color: rgba(50,215,75,.22);   }
+html.dark .alert.error   { color: #ff453a; background: rgba(255,69,58,.10);   border-color: rgba(255,69,58,.22);   }
+html.dark .alert.warning { color: #ff9f0a; background: rgba(255,159,10,.10);  border-color: rgba(255,159,10,.22);  }
+html.dark .alert.info    { color: #0a84ff; background: rgba(10,132,255,.10);  border-color: rgba(10,132,255,.20);  }
+
+/* Disabled Create button */
+html.dark .btn-create:disabled { background: #1e3a6e; }
+
+/* Sign-in email input — browser default is white otherwise */
+html.dark #maildrop-input { background: var(--surface-2); color: var(--ink); }
+
+/* Native selects render in light mode by default without this */
+html.dark select { color-scheme: dark; }
+
+/* ── Hover states: replace dark-on-dark rgba(0,0,0) overlays ── */
+html.dark .tab-item:hover                                         { background: rgba(255,255,255,0.05); }
+html.dark .tab-close:hover                                        { background: rgba(255,255,255,0.1);  color: var(--ink-2); }
+html.dark .tab-new-btn:hover                                      { background: rgba(255,255,255,0.06); }
+html.dark .view-btn:hover:not(.active)                            { background: rgba(255,255,255,0.07); }
+html.dark .fmt-btn:hover                                          { background: rgba(255,255,255,0.08); color: var(--ink); }
+html.dark .fmt-more-btn:hover                                     { background: rgba(255,255,255,0.08); color: var(--ink); }
+html.dark .flagged-field:hover, html.dark .location-field:hover   { background: rgba(255,255,255,0.07); color: var(--ink-2); }
+html.dark .attach-field:hover                                     { background: rgba(255,255,255,0.12); color: var(--ink-2); }
+html.dark .btn-clear:hover                                        { background: rgba(255,255,255,0.12); }
+html.dark .btn-clear-all-tabs:hover:not(:disabled)                { background: rgba(255,255,255,0.12); color: var(--ink-2); }
+
+/* ── Secondary buttons: visible against the dark meta bar surface ── */
+html.dark .btn-clear,
+html.dark .btn-use-local,
+html.dark .btn-discard-all,
+html.dark .btn-clear-all-tabs {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.13);
+}
+html.dark .meta-right .attach-field {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.13);
+}
+html.dark .editor-toggle {
+    border-color: rgba(255,255,255,0.13);
+}
+html.dark .view-btn + .view-btn {
+    border-left-color: rgba(255,255,255,0.13);
+}
+
+/* ── Theme toggle button ─────────────────────────────────── */
+
+.btn-theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 2px 4px;
+    margin: 0;
+    cursor: pointer;
+    color: var(--ink-3);
+    border-radius: 4px;
+    transition: color 0.15s, background 0.15s;
+    vertical-align: middle;
+    line-height: 1;
+}
+.btn-theme-toggle:hover {
+    color: var(--ink-2);
+    background: rgba(0,0,0,0.06);
+}
+html.dark .btn-theme-toggle:hover {
+    background: rgba(255,255,255,0.08);
+}
+.btn-theme-toggle svg { display: block; }
+
+/* Icon visibility: CSS owns this state, driven by html.dark */
+.btn-theme-toggle .icon-moon           { display: none; }
+html.dark .btn-theme-toggle .icon-sun  { display: none; }
+html.dark .btn-theme-toggle .icon-moon { display: block; }
+
+/* ── PWA: safe area insets (requires viewport-fit=cover) ─── */
+
+.page-wrapper {
+    padding-bottom: max(72px, calc(env(safe-area-inset-bottom) + 48px));
+}
+
+@media (max-width: 560px) {
+    .page-wrapper {
+        padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 24px));
+    }
+}
+
+/* ── Touch targets: extend hit area without changing layout ── */
+
+/* HIG: 44×44pt minimum — use pseudo-element to expand invisibly */
+.tab-close {
+    position: relative;
+}
+.tab-close::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+}
+
+.tag-chip-remove {
+    position: relative;
+}
+.tag-chip-remove::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+}
+
+/* ── Touch devices: larger targets, hide keyboard shortcuts ── */
+
+@media (pointer: coarse) {
+    .tab-bar           { min-height: 44px; }
+    .tab-item          { min-height: 44px; }
+    .tab-new-btn       { min-height: 44px; padding: 0 14px; }
+    .fmt-btn           { height: 32px; padding: 0 9px; }
+    .view-btn          { padding: 5px 13px; }
+    .keyboard-shortcuts { display: none; }
+}
+
+/* ── Reduce motion ───────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        transition-duration: 0.01ms !important;
+        animation-duration:  0.01ms !important;
+    }
 }
