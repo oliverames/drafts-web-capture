@@ -1,5 +1,36 @@
 # Worklog
 
+## 2026-04-01 — Format bar responsive overhaul, mobile UX, editor padding
+
+**What changed**: Full rework of the format bar for responsive behavior and mobile usability, plus iOS-specific fixes.
+
+- **Format bar responsive layout**: Secondary buttons (# " • 1. — Link Image) now render inline on desktop as a `.fmt-extended-group`. On mobile (≤680px) that group hides and a `.fmt-more-group` (pinned outside the scrollable `#fmt-btns` container) shows instead. More button is a flex sibling of `#fmt-btns` in `.format-bar-mid` — not inside it — so it stays pinned right regardless of button scroll.
+- **More dropdown opens upward**: Changed from `top: calc(100% + 4px)` to `bottom: calc(100% + 4px)` so the menu opens above the format bar, not into the meta/flag row below.
+- **HIG 44pt touch targets**: More button is now `height: 44px`; format bar `min-height: 44px`. "More" label kept visible at all breakpoints — removing it left only a tiny `▾` glyph that was nearly impossible to tap.
+- **iOS Safari zoom fix**: `#draft-content` and `.cm-content` set to `font-size: 16px` on mobile. iOS zooms on any input with computed size < 16px; this stops it without touching `user-scalable`.
+- **Equal editor padding**: Changed from asymmetric `22px 22px 16px` to `20px` uniform in both `editor.js` (CM6 theme) and `styles.css` (textarea + preview pane).
+- **Button contrast**: `.fmt-btn` color bumped from `--ink-3` to `--ink-2`; `.fmt-more-btn` from `--ink-4` to `--ink-3`.
+- **Desktop editor height**: Reduced to 90% of available viewport (multiplied computed height by 0.9).
+- **Multi-iteration fix**: Three screenshot-check rounds were needed to get mobile right — More button was initially inside the scrollable container (scrolled off), then too small (24px), then "More" label hidden by existing 480px rule. Each caught and fixed in sequence.
+
+**Decisions made**:
+- More button moved to `fmtMid.appendChild(moreGroup)` rather than `container.appendChild(moreGroup)` — essential so it doesn't scroll with the buttons. Required cleanup of stale moreGroup on each `renderFormatButtons` call via `fmtMid.querySelectorAll('.fmt-more-group').forEach(el => el.remove())`.
+- `mdLine` items (# " •) moved from always-inline to the extended/More group. On 390px, B I S ` + More already fills the bar — adding 3 more inline buttons caused clipping with no way to reach them.
+- Removed separator before More button (was eating 7px, causing `` ` `` to clip at 390px). "More ▾" label provides sufficient visual separation.
+- `.format-bar-mid` changed from `overflow: hidden` to `overflow: visible` — necessary for the absolute-positioned dropdown to escape, and for the More button (outside `#fmt-btns`) to not be clipped.
+- HIG-compliant 44pt touch target: referenced Apple HIG which specifies 44×44pt minimum for iOS/iPadOS interactive elements.
+
+**Left off at**:
+- Still open: allow editing the Mail Drop address without losing queue
+- Still open: More dropdown keyboard navigation (arrow keys)
+- Still open: Should `clearAllTabs` queue tab content before clearing?
+- New: dividers (fmt-sep) in format bar — user asked what they're for; kept for now but user may want them removed (confirmed they group inline/line/extended button sets)
+
+**Open questions**:
+- Still open: Add DOMPurify if the app ever becomes multi-user.
+
+---
+
 ## 2026-04-01 — PWA support, dark mode toggle, accessibility contrast fixes
 
 **What changed**: Full PWA implementation, dark mode with manual toggle, and a round of accessibility contrast fixes. All committed and pushed to live.
