@@ -372,7 +372,7 @@ body {
     padding: 5px 14px 5px 16px;
     background: var(--surface);
     border-bottom: 1px solid var(--divider);
-    min-height: 36px;
+    min-height: 44px;
 }
 
 .format-bar-left {
@@ -386,7 +386,8 @@ body {
     display: flex;
     align-items: center;
     min-width: 0;
-    overflow: hidden;
+    overflow: visible;
+    position: relative;
 }
 
 .format-bar-right {
@@ -417,6 +418,8 @@ body {
     gap: 1px;
     flex-wrap: nowrap;
     overflow: hidden;
+    flex: 1;
+    min-width: 0;
 }
 
 .fmt-btn {
@@ -428,7 +431,7 @@ body {
     padding: 0 6px;
     border: none;
     background: transparent;
-    color: var(--ink-3);
+    color: var(--ink-2);
     font-size: 0.8rem;
     font-family: inherit;
     border-radius: 5px;
@@ -456,6 +459,19 @@ body {
     margin: 0 3px;
 }
 
+/* Responsive groups: extended shown inline on large screens, More button on small */
+.fmt-extended-group {
+    display: flex;
+    align-items: center;
+    gap: 1px;
+}
+
+.fmt-more-group {
+    display: none;
+    align-items: center;
+    flex-shrink: 0;
+}
+
 /* More dropdown */
 .fmt-more-wrap {
     position: relative;
@@ -470,7 +486,7 @@ body {
     padding: 0 6px;
     border: none;
     background: transparent;
-    color: var(--ink-4);
+    color: var(--ink-3);
     font-size: 0.78rem;
     font-family: inherit;
     border-radius: 5px;
@@ -487,7 +503,8 @@ body {
 .fmt-more-menu {
     display: none;
     position: absolute;
-    top: calc(100% + 4px);
+    bottom: calc(100% + 4px);
+    top: auto;
     right: 0;
     background: var(--surface);
     border: 1px solid var(--divider);
@@ -613,7 +630,7 @@ body {
 #draft-content {
     display: block;
     width: 100%;
-    padding: 22px 22px 16px;
+    padding: 20px;
     border: none;
     outline: none;
     resize: none;
@@ -639,7 +656,7 @@ body {
 /* ── Markdown preview pane ───────────────────────────────── */
 
 .preview-pane {
-    padding: 22px 22px 16px;
+    padding: 20px;
     min-height: 260px;
     font-size: 0.96rem;
     line-height: 1.7;
@@ -1214,6 +1231,16 @@ body.setup-mode .editor-only { display: none !important; }
     .tags-field { max-width: 140px; }
     .fmt-btns { overflow-x: auto; scrollbar-width: none; }
     .fmt-btns::-webkit-scrollbar { display: none; }
+    /* Collapse extended inline buttons; show More button instead */
+    .fmt-extended-group { display: none; }
+    .fmt-more-group { display: flex; align-items: center; }
+    /* Compact button padding to fit B I S ` + More in tight bar */
+    .fmt-btn { padding: 0 5px; }
+    /* HIG minimum 44pt touch target for More button */
+    .fmt-more-btn { height: 44px; padding: 0 8px; font-size: 0.85rem; }
+    /* Prevent iOS Safari zoom on input focus (requires font-size >= 16px) */
+    #draft-content { font-size: 16px; }
+    #cm-editor-root .cm-content { font-size: 16px !important; }
 }
 
 @media (max-width: 560px) {
@@ -1255,8 +1282,7 @@ body.setup-mode .editor-only { display: none !important; }
         padding-top: 8px;
         gap: 7px;
     }
-    /* Format bar: hide more-menu labels on tiny screens */
-    .fmt-more-btn .fmt-more-label { display: none; }
+    /* Keep More label visible — it's the only affordance for the menu */
 }
 
 /* ── Dark mode ───────────────────────────────────────────── */
