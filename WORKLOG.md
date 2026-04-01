@@ -1,5 +1,31 @@
 # Worklog
 
+## 2026-04-01 — PWA support, dark mode toggle, accessibility contrast fixes
+
+**What changed**: Full PWA implementation, dark mode with manual toggle, and a round of accessibility contrast fixes. All committed and pushed to live.
+
+- **PWA**: `manifest.json` created with all icon sizes. Service worker rewritten from pass-through stub to cache-first with background revalidation — precaches all 9 app shell assets on install, purges stale caches on activate. `viewport-fit=cover` + `env(safe-area-inset-bottom)` for iPhone notch/home indicator. `100dvh` instead of `100vh` for correct height in mobile browsers. Tested with Playwright: SW activates, all assets cached, offline reload confirmed working.
+- **Dark mode**: `@media (prefers-color-scheme: dark)` replaced with `html.dark` class selectors throughout. No-FOUC init script in `<head>` sets the class from localStorage (or system pref fallback) before the stylesheet parses. Theme toggle (sun/moon icon) added to footer nav — icon state owned by CSS selectors, not JS. `theme-color` meta updated on toggle for PWA chrome/Safari. System preference changes tracked while page is open via `matchMedia` listener.
+- **Accessibility**: `.help-link`, `.btn-sign-out`, `.btn-theme-toggle` bumped from `--ink-4` (#8e8e93, 2.88:1) to `--ink-3` (#636366, ~5.2:1) — passes WCAG AA.
+- **Code cleanup (simplify pass)**: merged duplicate `@media (pointer: coarse)` blocks; consolidated `body { min-height }` into main body rule; SW `response.clone()` moved before conditional to prevent latent body-stream locking; stale implementation comment removed.
+
+**Decisions made**:
+- Dark mode uses `html.dark` class (JS-owned) rather than `@media (prefers-color-scheme: dark)` to support the manual toggle without duplicating the entire CSS block.
+- Icon visibility (sun/moon) is CSS-driven (`html.dark .icon-sun { display:none }`), not JS-driven — eliminates `syncIcon()` and its redundant DOM reads.
+- SW background revalidation kept despite efficiency agent's note — it's intentional stale-while-revalidate; cache invalidation is via `CACHE_VERSION` bump on deploy.
+- Dark mode alert colors NOT changed despite accessibility agent's suggestion — recalculated against actual composited backgrounds (semi-transparent over `#000000`) and all pass easily (~8.6:1 success, ~5.6:1 info). Agent had calculated against wrong background.
+- Ran Playwright SW test before documenting PWA support in README (caught a documentation-without-testing gap).
+
+**Left off at**: All three "Still open" PWA/dark mode items from previous entries are resolved. Remaining:
+- Still open: allow editing the Mail Drop address without losing queue
+- Still open: More dropdown keyboard navigation (arrow keys)
+- Still open: Should `clearAllTabs` queue tab content before clearing?
+
+**Open questions**:
+- Still open: Add DOMPurify if the app ever becomes multi-user.
+
+---
+
 ## 2026-03-31 — Format bar, selection toolbar, desktop height, meta bar, shortcuts
 
 **What changed**: Major UI feature additions following user request, with three rounds of fresh-eyes auditing to find bugs introduced or missed along the way.
