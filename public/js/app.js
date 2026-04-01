@@ -522,6 +522,9 @@ document.addEventListener('DOMContentLoaded', function () {
         const container = document.getElementById('fmt-btns');
         if (!container) return;
         while (container.firstChild) container.removeChild(container.firstChild);
+        // Remove any previously appended moreGroup (lives outside #fmt-btns)
+        const fmtMid = container.parentElement;
+        fmtMid.querySelectorAll('.fmt-more-group').forEach(el => el.remove());
 
         const sep = () => { const s = document.createElement('div'); s.className = 'fmt-sep'; return s; };
         const mkEl = (tag, text) => { const e = document.createElement(tag); e.textContent = text; return e; };
@@ -550,11 +553,25 @@ document.addEventListener('DOMContentLoaded', function () {
         ];
 
         if (['Markdown', 'MultiMarkdown', 'GitHub Markdown'].includes(syntax)) {
+            // Only primary inline buttons always visible (mobile-safe)
             mdPrimary.forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
-            container.appendChild(sep());
-            mdLine.forEach(cfg => container.appendChild(makeFormatBtn(cfg)));
 
             const moreItems = syntax === 'GitHub Markdown' ? [...mdMore, ...ghExtra] : mdMore;
+            // All secondary items: line buttons + extended, collapsed into More on mobile
+            const allSecondary = [...mdLine, ...moreItems];
+
+            // Extended group: shown inline on large screens (hidden on mobile via CSS)
+            const extGroup = document.createElement('div');
+            extGroup.className = 'fmt-extended-group';
+            extGroup.appendChild(sep());
+            mdLine.forEach(cfg => extGroup.appendChild(makeFormatBtn(cfg)));
+            extGroup.appendChild(sep());
+            moreItems.forEach(cfg => extGroup.appendChild(makeFormatBtn(cfg)));
+            container.appendChild(extGroup);
+
+            // More group: only shown on mobile via CSS
+            const moreGroup = document.createElement('div');
+            moreGroup.className = 'fmt-more-group';
 
             const moreWrap = document.createElement('div');
             moreWrap.className = 'fmt-more-wrap';
@@ -571,7 +588,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const moreMenu = document.createElement('div');
             moreMenu.className = 'fmt-more-menu';
 
-            moreItems.forEach(cfg => {
+            allSecondary.forEach(cfg => {
                 const item = document.createElement('button');
                 item.type = 'button';
                 item.className = 'fmt-more-item';
@@ -596,8 +613,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
             moreWrap.appendChild(moreBtn);
             moreWrap.appendChild(moreMenu);
-            container.appendChild(sep());
-            container.appendChild(moreWrap);
+            moreGroup.appendChild(moreWrap);
+            fmtMid.appendChild(moreGroup);
 
         } else if (syntax === 'Taskpaper') {
             [
@@ -634,7 +651,7 @@ document.addEventListener('DOMContentLoaded', function () {
         const footerRect = footer.getBoundingClientRect();
         // belowH is everything between editor bottom and footer bottom — constant regardless of editor height
         const belowH  = footerRect.bottom - cmRect.bottom;
-        const newMinH = Math.max(200, Math.floor(window.innerHeight - cmRect.top - belowH));
+        const newMinH = Math.max(200, Math.floor((window.innerHeight - cmRect.top - belowH) * 0.9));
         document.documentElement.style.setProperty('--editor-min-h', newMinH + 'px');
     }
 

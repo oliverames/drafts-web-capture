@@ -41,7 +41,7 @@ const editorTheme = EditorView.theme({
         fontFamily: 'inherit',
     },
     '.cm-content': {
-        padding: '22px 22px 16px',
+        padding: '20px',
         minHeight: '220px',
         caretColor: '#1c1c1e',
     },
