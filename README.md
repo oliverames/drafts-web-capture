@@ -28,6 +28,8 @@
 
 An unofficial static web app that lets you write, tag, and send drafts directly into the [Drafts](https://getdrafts.com) app (by [Agile Tortoise](https://agiletortoise.com)) via Mail Drop. Currently deployed at [drafts.amesvt.com](https://drafts.amesvt.com).
 
+> **Status:** This is currently broken for general use. Resend is my sending client for Gmail, and the current email proxy depends on that personal setup. Treat this project as personal-use only until the sending flow is generalized.
+
 ## Why This Exists
 
 I wanted a way to write from any computer (especially Windows or Linux machines where the native Drafts app isn't available) and have it sync instantly to my iPhone and iPad.
@@ -76,7 +78,7 @@ The frontend sends your draft content to a lightweight Cloudflare Worker. The Wo
 
 ## Configuration
 
-For production deployments, you must configure your Cloudflare Worker with a Resend API key.
+For production deployments of the current personal setup, the Cloudflare Worker expects a Resend API key tied to the Gmail sending flow.
 
 ```bash
 npx wrangler secret put RESEND_API_KEY
