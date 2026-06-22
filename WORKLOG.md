@@ -1,5 +1,19 @@
 # Worklog
 
+## 2026-06-22 — Security: scrubbed leaked Resend + CloudKit secrets from git history
+
+**What changed**: A security audit of all public repos found two real secrets in this repo's history. (1) Resend API key `re_i2ikDujd…` in `test-resend.js` (commit 4b4377db, 2026-03-31) — the file was already deleted from HEAD but lived in 2 commits; this was the CURRENT production send-only key. (2) CloudKit web token `f65019e2…` in `public/js/cloudkit.js` (commit 954c84c8) — removed from HEAD but live in 6 commits. Rewrote all 40 commits with `git-filter-repo --replace-text` (both secrets → placeholders) and force-pushed `main`. HEAD content is byte-identical (secrets were not in HEAD); only ancestor blobs changed. No tags on this repo. Verified 0 occurrences across all history from a fresh clone (gitleaks: 0 findings).
+
+**Decisions made**:
+- Rotate-then-scrub, because scrubbing history does not un-expose an already-public key. The Resend key was rotated (new send-only key in 1P `Resend.com`, old key revoked 401) and the CloudKit token flagged for manual regeneration (no rotation API). Critical catch: the Resend key was ALSO the SMTP password in Gmail Send-mail-as for oliver@amesvt.com (`smtp.resend.com:465`), updated there too; inbound is Cloudflare Email Routing and was never affected.
+- Ran filter-repo with `GIT_CONFIG_GLOBAL=/dev/null` — the global `alias.cleanup-preview` has an embedded newline that crashes filter-repo's config parser.
+
+**Left off at**: Secrets scrubbed + Resend rotated/verified. CloudKit token regeneration still pending (Apple Reminder set). Carried open items from 2026-04-01 untouched (editable Mail Drop address without losing queue; More dropdown keyboard navigation).
+
+**Open questions**: None new.
+
+---
+
 ## 2026-04-01 — Format bar responsive overhaul, mobile UX, editor padding
 
 **What changed**: Full rework of the format bar for responsive behavior and mobile usability, plus iOS-specific fixes.
