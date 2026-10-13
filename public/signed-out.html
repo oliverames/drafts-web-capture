@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Sign in - Drafts Capture</title>
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#F0F0F2">
+    <link rel="icon" type="image/png" sizes="32x32" href="/img/favicon-32.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="/img/apple-touch-icon.png">
+    <!-- Same theme init as the app, so the signed-out page follows the saved or system theme. -->
+    <script>(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(t===null&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark');}catch(e){}}());</script>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <div class="page-wrapper">
+        <main>
+            <div class="card sign-in-card" style="margin-top: 12vh;">
+                <div class="sign-in-icon" aria-hidden="true">
+                    <img src="/img/drafts-icon.png" width="56" height="56" alt="">
+                </div>
+                <h1 class="sign-in-title">Drafts Capture</h1>
+                <p class="sign-in-description">Sign in to write drafts and send them to your Drafts Mail Drop. Drafts you wrote offline stay queued on this device until you do.</p>
+                <a class="btn-create btn-link" href="/login">Sign in with a passkey</a>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

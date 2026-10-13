@@ -994,6 +994,13 @@ body {
     cursor: not-allowed;
 }
 
+/* Link styled as the primary button (signed-out page) */
+.btn-create.btn-link {
+    text-decoration: none;
+    padding: 10px 22px;
+    font-size: 0.9rem;
+}
+
 /* ── Queue card ──────────────────────────────────────────── */
 
 .queue-card { padding: 16px 18px; }

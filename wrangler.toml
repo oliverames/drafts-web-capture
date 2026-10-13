@@ -1,0 +1,41 @@
+# drafts-capture: the Drafts Capture PWA and its send API, served from one Worker at
+# https://drafts.amesvt.com behind the shared AmesVT passkey broker (worker amesvt-auth).
+# Run wrangler from the repository root.
+name = "drafts-capture"
+main = "worker/src/index.js"
+compatibility_date = "2026-10-01"
+
+# Reachable only on the custom domain: the broker's callback is fixed to drafts.amesvt.com,
+# and there is no workers.dev address or preview URL to leave unprotected.
+workers_dev = false
+preview_urls = false
+routes = [{ pattern = "drafts.amesvt.com", custom_domain = true }]
+
+# The PWA in public/. run_worker_first sends every request through the Worker, which
+# checks the session before it reads from ASSETS. html_handling = "none" and
+# not_found_handling = "none" make ASSETS.fetch return exactly the file asked for.
+[assets]
+directory = "./public"
+binding = "ASSETS"
+run_worker_first = true
+html_handling = "none"
+not_found_handling = "none"
+
+# Sign-in goes through the shared AmesVT passkey broker. Its DraftsGateway entrypoint
+# (audience "drafts", callback https://drafts.amesvt.com/auth/callback) must be live
+# before this Worker is deployed.
+[[services]]
+binding = "AUTH_BROKER"
+service = "amesvt-auth"
+entrypoint = "DraftsGateway"
+
+# Throttles /login and /auth/callback: 10 per minute per route per IP.
+# Namespace ids are account-wide: 1001-1003 apple-core and sibley-kemp, 1301 HVAC, 1302 here.
+[[ratelimits]]
+name = "LOGIN_LIMIT"
+namespace_id = "1302"
+simple = { limit = 10, period = 60 }
+
+# Secrets are NOT set here. Use:
+#   npx wrangler secret put RESEND_API_KEY
+# (a send-only Resend key; the old drafts-ck-proxy Worker holds the current one)

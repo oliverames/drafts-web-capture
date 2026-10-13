@@ -164,3 +164,7 @@ npm-debug.log*
 
 # Windows
 Thumbs.db
+
+# Wrangler local state and cache
+.wrangler/
+.dev.vars

@@ -1,5 +1,29 @@
 # Worklog
 
+## 2026-10-13 - Move to one Worker behind the AmesVT passkey
+
+**What changed**: Replaced the GitHub Pages site plus the separate `drafts-ck-proxy` Worker with a single Cloudflare Worker, `drafts-capture`, that serves the PWA and the send API at https://drafts.amesvt.com entirely behind the shared AmesVT passkey broker (`amesvt-auth`, entrypoint `DraftsGateway`, audience `drafts`), mirroring Calendar Sync and HVAC. Nothing is deployed yet.
+
+- `wrangler.toml` at the repo root: `[assets]` from `./public` with `run_worker_first`, custom domain route, `workers_dev = false`, `preview_urls = false`, `AUTH_BROKER` service binding, and a `LOGIN_LIMIT` rate limit (namespace 1302).
+- `worker/src/auth.js` is the Calendar Sync broker client ported to the drafts audience and cookies (`__Host-drafts`, `-flow`, `-retry`). The callback takes the redirect GET and the broker's form POST. Identity is checked on every request and fails closed.
+- `worker/src/index.js` gates every request. Public without a session: `/signed-out`, the stylesheet, the manifest and icons (the manifest is fetched without credentials). Signed-out navigations get 303 to `/login`, signed-out API calls get 401 JSON, and POSTs need `Origin: https://drafts.amesvt.com`. No CORS headers anywhere.
+- `worker/src/send.js` is the old proxy logic at `POST /api/send`. It now refuses any recipient that is not a bare Mail Drop address, bounds the body (10 MB) and draft text, strips line breaks from the subject, never logs content and never echoes the Resend error body.
+- PWA: `app.js` posts to same-origin `/api/send`. On 401 the draft stays queued, the editor clears to avoid a duplicate, and the page goes to `/login`. Added a Sign out button. `sw.js` (cache `v2`) never caches `/api/*`, `/login`, `/auth/*`, `/signed-out`, never stores redirects or sign-in pages, uses network-first navigations with the cached shell as the offline fallback, and keeps the shell under one key for `?text=` bookmarklet URLs.
+- Added `public/signed-out.html` in the existing sign-in card style, a `.btn-link` button style, tests (`npm test`, 49 tests with a fake broker, fake assets and mocked Resend, plus a vm-based service worker suite), and removed `worker/index.js`, `worker/wrangler.toml`, `public/CNAME` and the GitHub Pages workflow. `.wrangler/` is now untracked and ignored.
+
+**Decisions made**:
+- The recipient rule allows `drafts.io` and `maildrop.getdrafts.com`, not only `drafts.io`, because the page's own address check already accepts both and rejecting the second would silently break an address on it. One list in `send.js` (`ALLOWED_DOMAINS`) if that should narrow.
+- Navigations are network-first, not cache-first, so an expired session reaches the Worker and is sent to `/login`. Cached shell on offline, a 4 second stall, or a 5xx.
+- CSP allows `'unsafe-inline'` scripts and styles plus jsdelivr and esm.sh, because the page uses inline scripts and loads marked and CodeMirror from them. Checked in a browser against a stub broker: the editor mounts.
+- `sw.js` stays behind the session. A service worker update check made while signed out just fails and keeps the old worker.
+
+**Cutover order (not done)**: (1) `DraftsGateway` live in the broker, (2) `npx wrangler secret put RESEND_API_KEY` on `drafts-capture`, (3) remove the DNS CNAME `drafts` to `oliverames.github.io` and disable GitHub Pages, (4) `npm run deploy`, (5) verify (303 to `/login` when signed out, passkey sign-in, send a draft), (6) delete the old `drafts-ck-proxy` Worker.
+
+**Left off at**: Branch `claude/amesvt-passkey` pushed, no PR. Known gap: a bookmarklet link opened while signed out loses its `?text=` parameters in the sign-in round trip. The service worker was tested in Node with a fake Cache API only; the embedded browser used for the visual check does not register service workers. Carried open items from earlier entries untouched.
+
+**Open questions**: None.
+
+---
 ## 2026-06-22 — Security: scrubbed leaked Resend + CloudKit secrets from git history
 
 **What changed**: A security audit of all public repos found two real secrets in this repo's history. (1) Resend API key `re_i2ikDujd…` in `test-resend.js` (commit 4b4377db, 2026-03-31) — the file was already deleted from HEAD but lived in 2 commits; this was the CURRENT production send-only key. (2) CloudKit web token `f65019e2…` in `public/js/cloudkit.js` (commit 954c84c8) — removed from HEAD but live in 6 commits. Rewrote all 40 commits with `git-filter-repo --replace-text` (both secrets → placeholders) and force-pushed `main`. HEAD content is byte-identical (secrets were not in HEAD); only ancestor blobs changed. No tags on this repo. Verified 0 occurrences across all history from a fresh clone (gitleaks: 0 findings).
