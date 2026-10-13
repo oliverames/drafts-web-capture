@@ -82,7 +82,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.getElementById('save-maildrop-btn')?.addEventListener('click', () => {
         const input = document.getElementById('maildrop-input');
-        if (input.value.includes('@drafts.io') || input.value.includes('@maildrop.getdrafts.com')) {
+        const address = input.value.trim().toLowerCase();
+        if (address.endsWith('@drafts.io') || address.endsWith('@maildrop.getdrafts.com')) {
             localStorage.setItem('mailDropAddress', input.value.trim());
             localStorage.removeItem('skipCloudKit');
             checkAuth();
@@ -98,6 +99,16 @@ document.addEventListener('DOMContentLoaded', function () {
         localStorage.removeItem('mailDropAddress');
         localStorage.removeItem('skipCloudKit');
         checkAuth();
+    });
+
+    document.getElementById('sign-out-btn')?.addEventListener('click', async () => {
+        try {
+            const r = await fetch('/auth/logout', { method: 'POST', credentials: 'same-origin' });
+            if (!r.ok) throw new Error('logout failed');
+            window.location.assign('/signed-out');
+        } catch {
+            showAlert('Could not sign out. Check your connection and try again.', 'error');
+        }
     });
 
     document.getElementById('use-local-btn')?.addEventListener('click', () => {
@@ -274,9 +285,10 @@ document.addEventListener('DOMContentLoaded', function () {
                 attachments: []
             };
             if (email) {
-                sendDraftData(payload, email).catch(() => {
+                sendDraftData(payload, email).catch(err => {
                     addToQueue(payload);
-                    showAlert('Draft queued (send failed).', 'warning');
+                    if (isAuthError(err)) requireSignIn();
+                    else showAlert('Draft queued (send failed).', 'warning');
                 });
             } else {
                 addToQueue(payload);
@@ -778,8 +790,18 @@ document.addEventListener('DOMContentLoaded', function () {
                 })
                 .catch(err => {
                     hideLoading();
-                    console.error('Mail Drop error:', err);
                     addToQueue(draftData);
+                    if (isAuthError(err)) {
+                        // The draft now lives in the queue, so clear the editor to avoid a duplicate
+                        // after sign-in sends the user back here.
+                        const tab = tabs.find(t => t.id === activeTabId);
+                        if (tab) { tab.content = ''; tab.tags = ''; tab.flagged = false; }
+                        saveTabs();
+                        clearForm();
+                        requireSignIn();
+                        return;
+                    }
+                    console.error('Mail Drop error:', err);
                     showAlert('Sync failed — draft queued for retry.', 'warning');
                 });
         } else {
@@ -788,15 +810,35 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
+    // Sending goes through this site's own authenticated endpoint. A 401 (or a redirect to
+    // the sign-in page) means the session ended: the caller keeps the draft queued and
+    // requireSignIn() sends the user through /login. Offline failures are plain network errors.
+    class AuthRequiredError extends Error {}
+    const isAuthError = err => err instanceof AuthRequiredError;
+    let signInPending = false;
+
     function sendDraftData(draftData, email) {
-        return fetch('https://drafts-ck-proxy.oliverames.workers.dev', {
+        return fetch('/api/send', {
             method: 'POST',
+            credentials: 'same-origin',
+            redirect: 'manual',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, ...draftData })
-        }).then(r => r.json().then(d => {
-            if (!r.ok) return Promise.reject(d.error || 'API Error');
-            return { success: true };
-        }));
+        }).then(r => {
+            if (r.status === 401 || r.type === 'opaqueredirect') throw new AuthRequiredError('Sign in required');
+            return r.json().catch(() => ({})).then(d => {
+                if (!r.ok) return Promise.reject(d.error || 'API Error');
+                return { success: true };
+            });
+        });
+    }
+
+    function requireSignIn() {
+        if (signInPending) return;
+        signInPending = true;
+        hideLoading();
+        showAlert('Your sign-in ended. Your drafts are saved on this device. Taking you to sign in...', 'warning');
+        setTimeout(() => { window.location.assign('/login'); }, 2500);
     }
 
     // ── Bookmarklet redirect ──────────────────────────────────
@@ -1057,6 +1099,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 showAlert('Draft submitted to Drafts.', 'success');
             })
             .catch(err => {
+                if (isAuthError(err)) { requireSignIn(); return; }
                 console.error('Submit error:', err);
                 showAlert('Failed to submit. Check your connection and try again.', 'error');
             });
@@ -1128,7 +1171,11 @@ document.addEventListener('DOMContentLoaded', function () {
             }
             sendDraftData(allDrafts[i], email)
                 .then(() => next(i + 1))
-                .catch(err => { hideLoading(); showAlert('Error on draft ' + (i + 1) + ': ' + (err.message || err), 'error'); });
+                .catch(err => {
+                    hideLoading();
+                    if (isAuthError(err)) { requireSignIn(); return; }
+                    showAlert('Error on draft ' + (i + 1) + ': ' + (err.message || err), 'error');
+                });
         };
         next();
     }
