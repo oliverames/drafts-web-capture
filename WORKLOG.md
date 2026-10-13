@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-10-13 - Bookmarklet text survives sign-in; capture.amesvt.com is permanent
+
+**What changed**:
+- [PR 4](https://github.com/oliverames/drafts-web-capture/pull/4) fixes [#2](https://github.com/oliverames/drafts-web-capture/issues/2). A signed-out visit to `/?text=...` stores the bookmarklet parameters (`text`, `tags`, `url`, `title`, `sel`) in a ten-minute `__Host-drafts-return` cookie. The sign-in callback returns to `/` with only those parameters.
+- Text containing a bare `%` no longer throws in `handleUrlParameters()` and stops the app from starting.
+- The service worker cache is now v3.
+- For [#3](https://github.com/oliverames/drafts-web-capture/issues/3), the Cloudflare redirect for capture.amesvt.com is now a 301 to drafts.amesvt.com that keeps the path and query. Its DNS record was changed from the retired `oliverames.github.io` CNAME to a proxied `AAAA 100::` placeholder.
+
+**Decisions made**: The return target is always `/`, so the cookie cannot redirect anywhere else. Text longer than about 3,800 encoded characters does not fit in a cookie and is not carried; the README notes the limit.
+
+**Verification**: `npm test` passed 51 of 51, and `wrangler deploy --dry-run` succeeded. The Worker was deployed as version `e03902b1`. Live, `/?text=hello%20world&evil=1` returned a 303 to `/login` and set `__Host-drafts-return=text=hello+world`. `capture.amesvt.com/?text=hi` returned a 301 to `https://drafts.amesvt.com/?text=hi`.
+
+**Left off at**: Still open: Oliver signs in once and sends a test draft.
+
+**Open questions**: None.
+
+---
+
 ## 2026-10-13 - Move to one Worker behind the AmesVT passkey
 
 **What changed**: Replaced the GitHub Pages site plus the separate `drafts-ck-proxy` Worker with a single Cloudflare Worker, `drafts-capture`, that serves the PWA and the send API at https://drafts.amesvt.com entirely behind the shared AmesVT passkey broker (`amesvt-auth`, entrypoint `DraftsGateway`, audience `drafts`), mirroring Calendar Sync and HVAC. Nothing is deployed yet.
