@@ -1,7 +1,7 @@
 // drafts-capture: serves the Drafts Capture PWA and its send API at https://drafts.amesvt.com,
 // entirely behind the shared AmesVT passkey broker (login.amesvt.com). The static files in
 // public/ are bound as ASSETS with run_worker_first, so every request reaches this Worker.
-import { APP_ORIGIN, AuthError, authenticated, callback, clearApp, clearFlow, login, logout } from './auth.js';
+import { APP_ORIGIN, AuthError, authenticated, callback, clearApp, clearFlow, login, logout, rememberReturn } from './auth.js';
 import { headers, json, redirect, withCookies } from './security.js';
 import { send } from './send.js';
 
@@ -64,7 +64,8 @@ export default {
       if (!(await authenticated(request, env))) {
         // A current central sign-in hands back from /login without a passkey prompt.
         if (api || (request.method !== 'GET' && request.method !== 'HEAD')) return withCookies(json({ error: 'Please sign in again.' }, 401), [clearApp()]);
-        return redirect('/login', [clearApp()]);
+        const carried = request.method === 'GET' ? rememberReturn(url) : null;
+        return redirect('/login', carried ? [clearApp(), carried] : [clearApp()]);
       }
       if (api) return path === '/api/send' ? send(request, env) : json({ error: 'Not found.' }, 404);
       if (request.method === 'POST') return json({ error: 'Not found.' }, 404);

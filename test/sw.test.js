@@ -15,7 +15,7 @@ function load(fetchImpl, seeded = {}) {
   const cache = { put: async (key, response) => { store.set(path(key), response); }, match: async key => store.get(path(key)) };
   const context = {
     self: { addEventListener: (type, fn) => { listeners[type] = fn; }, location: { origin: ORIGIN }, skipWaiting: async () => {}, clients: { claim: async () => {} } },
-    caches: { open: async () => cache, keys: async () => ['drafts-capture-v1', 'drafts-capture-v2', 'other'], delete: async key => { deleted.push(key); } },
+    caches: { open: async () => cache, keys: async () => ['drafts-capture-v1', 'drafts-capture-v2', 'drafts-capture-v3', 'other'], delete: async key => { deleted.push(key); } },
     fetch: (...args) => fetchImpl(...args), Request, Response, URL, setTimeout, clearTimeout, Promise,
   };
   vm.runInNewContext(CODE, context);
@@ -30,14 +30,14 @@ function load(fetchImpl, seeded = {}) {
 
 test('the cache version is bumped from v1', () => {
   const sw = load(async () => page());
-  assert.equal(vm.runInContext('CACHE_NAME', sw.context), 'drafts-capture-v2');
+  assert.equal(vm.runInContext('CACHE_NAME', sw.context), 'drafts-capture-v3');
 });
 
 test('activate removes the old cache but keeps the current one', async () => {
   const sw = load(async () => page());
   let done; sw.listeners.activate({ waitUntil: promise => { done = promise; } });
   await done;
-  assert.deepEqual(sw.deleted.sort(), ['drafts-capture-v1', 'other']);
+  assert.deepEqual(sw.deleted.sort(), ['drafts-capture-v1', 'drafts-capture-v2', 'other']);
 });
 
 test('API, sign-in and signed-out routes are never intercepted', () => {

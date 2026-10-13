@@ -184,6 +184,40 @@ describe('auth callback', () => {
     assert.equal(env.calls.broker.at(-1)[1], tok('K'));
   });
 
+  test('a signed-out bookmarklet visit keeps its text through sign-in', async () => {
+    const env = makeEnv();
+    const text = 'Notes; with "quotes", commas, % signs & emoji \u{1F4DD}\nline two';
+    const visit = await send(env, `/?text=${encodeURIComponent(text)}&tags=inbox&evil=1`);
+    assert.equal(location(visit), '/login');
+    const carried = setCookies(visit).find(c => c.startsWith('__Host-drafts-return='));
+    assert.match(carried, /; Path=\/; Max-Age=600; Secure; HttpOnly; SameSite=Lax$/);
+    const value = carried.split(';')[0].slice('__Host-drafts-return='.length);
+    assert.match(value, /^[A-Za-z0-9%*._+=&-]+$/, 'only cookie-safe characters');
+    const { flowCookie, state } = await startFlow(env);
+    const response = await send(env, `/auth/callback?code=${tok('C')}&state=${state}`, { cookies: [flowCookie, `__Host-drafts-return=${value}`] });
+    const back = new URL(location(response), ORIGIN);
+    assert.equal(back.pathname, '/');
+    assert.equal(back.searchParams.get('text'), text);
+    assert.equal(back.searchParams.get('tags'), 'inbox');
+    assert.equal(back.searchParams.has('evil'), false);
+    assert.ok(setCookies(response).some(c => c.startsWith('__Host-drafts-return=; ') && c.includes('Max-Age=0')));
+  });
+
+  test('the return cookie only ever leads back to / with bookmarklet parameters', async () => {
+    const env = makeEnv();
+    for (const path of ['/js/app.js?text=x', '/?nothing=here', '/']) {
+      assert.equal(setCookies(await send(env, path)).some(c => c.startsWith('__Host-drafts-return=')), false, path);
+    }
+    assert.equal(setCookies(await send(env, '/?text=x', { method: 'HEAD' })).some(c => c.startsWith('__Host-drafts-return=')), false);
+    const long = await send(env, `/?text=${'a'.repeat(4000)}`);
+    assert.equal(setCookies(long).some(c => c.startsWith('__Host-drafts-return=')), false, 'text too long for a cookie is not carried');
+    for (const forged of ['//evil.example', 'https%3A%2F%2Fevil.example', 'next=//evil.example']) {
+      const { flowCookie, state } = await startFlow(env);
+      const response = await send(env, `/auth/callback?code=${tok('C')}&state=${state}`, { cookies: [flowCookie, `__Host-drafts-return=${forged}`] });
+      assert.equal(location(response), '/', forged);
+    }
+  });
+
   test('a stale or missing flow restarts sign-in once, then stops', async () => {
     const env = makeEnv();
     const url = `/auth/callback?code=${tok('C')}&state=${tok('Q')}`;

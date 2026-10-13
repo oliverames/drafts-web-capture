@@ -13,7 +13,7 @@
  *  - Bump CACHE_VERSION whenever assets change to invalidate the old cache
  */
 
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME    = `drafts-capture-${CACHE_VERSION}`;
 const NAV_TIMEOUT_MS = 4000;
 
