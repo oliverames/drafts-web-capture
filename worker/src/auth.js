@@ -12,6 +12,13 @@ const AUDIENCE = 'drafts';
 export const APP_COOKIE = '__Host-drafts';
 const FLOW_COOKIE = '__Host-drafts-flow';
 const RETRY_COOKIE = '__Host-drafts-retry';
+const RETURN_COOKIE = '__Host-drafts-return';
+// The bookmarklet opens /?text=... (or url, title, sel, tags). Only these parameters
+// survive sign-in, always back onto /, so the return cookie cannot redirect elsewhere.
+const RETURN_PARAMS = ['text', 'tags', 'url', 'title', 'sel'];
+// Keeps the cookie under the 4096-byte browser limit with its name and attributes.
+const RETURN_MAX = 3800;
+const RETURN_MS = 10 * 60 * 1000;
 const FLOW_MS = 5 * 60 * 1000;
 export const SESSION_MS = 7 * 24 * 60 * 60 * 1000;
 const BROKER_TIMEOUT_MS = 4000;
@@ -22,6 +29,28 @@ export class AuthError extends Error { constructor(status) { super('Authenticati
 const cookie = (name, value, age) => `${name}=${value}; Path=/; Max-Age=${age}; Secure; HttpOnly; SameSite=Lax`;
 export const clearFlow = () => cookie(FLOW_COOKIE, '', 0);
 export const clearApp = () => cookie(APP_COOKIE, '', 0);
+const clearReturn = () => cookie(RETURN_COOKIE, '', 0);
+// Rebuilds a query from the bookmarklet parameters alone. URLSearchParams serializes to
+// characters that are all legal in a cookie value. Returns '' when nothing is kept.
+function bookmarkletQuery(search) {
+  if (typeof search !== 'string' || search.length > RETURN_MAX * 2) return '';
+  let input;
+  try { input = new URLSearchParams(search); } catch { return ''; }
+  const kept = new URLSearchParams();
+  for (const key of RETURN_PARAMS) { const value = input.get(key); if (value) kept.set(key, value); }
+  const query = kept.toString();
+  return query.length <= RETURN_MAX ? query : '';
+}
+// Cookie that carries a signed-out bookmarklet visit through sign-in, or null. Text too
+// long to fit is not carried; the README notes the limit.
+export function rememberReturn(url) {
+  const query = url.pathname === '/' ? bookmarkletQuery(url.search) : '';
+  return query ? cookie(RETURN_COOKIE, query, RETURN_MS / 1000) : null;
+}
+function returnLocation(request) {
+  const query = bookmarkletQuery(readCookie(request, RETURN_COOKIE) || '');
+  return query ? `/?${query}` : '/';
+}
 const base64url = bytes => btoa(String.fromCharCode(...new Uint8Array(bytes))).replaceAll('+', '-').replaceAll('/', '_').replace(/=+$/, '');
 const random = () => base64url(crypto.getRandomValues(new Uint8Array(32)));
 const sha256 = async value => base64url(await crypto.subtle.digest('SHA-256', enc.encode(value)));
@@ -127,7 +156,7 @@ export async function callback(request, env, url) {
   if (!result || !TOKEN.test(result.appSessionToken) || !Number.isSafeInteger(result.expiresAt) || result.expiresAt <= now || result.expiresAt > now + SESSION_MS) throw new AuthError(503);
   const age = Math.floor((result.expiresAt - now) / 1000);
   if (age < 1) throw new AuthError(503);
-  return { location: '/', cookies: [clearFlow(), cookie(RETRY_COOKIE, '', 0), cookie(APP_COOKIE, result.appSessionToken, age)] };
+  return { location: returnLocation(request), cookies: [clearFlow(), clearReturn(), cookie(RETRY_COOKIE, '', 0), cookie(APP_COOKIE, result.appSessionToken, age)] };
 }
 // Signing out here ends the central sign-in too, as on the other AmesVT apps.
 export async function logout(request, env) {

@@ -104,7 +104,7 @@ The Worker takes the first line of your draft (plus any tags formatted as `#hash
 
 ### Offline and expired sessions
 
-Drafts queue in local storage when the network is down. If `/api/send` answers `401` (the session ended), the draft stays queued, the editor is cleared so there is no duplicate, and the page sends you to `/login`. After sign-in you return to `/` and the queue is still there to submit. The service worker never caches `/api/*`, `/login`, `/auth/*` or `/signed-out`, never stores a redirect or sign-in page as the app shell, and serves the cached shell when offline. A bookmarklet link opened while signed out loses its `?text=` parameters in the sign-in round trip.
+Drafts queue in local storage when the network is down. If `/api/send` answers `401` (the session ended), the draft stays queued, the editor is cleared so there is no duplicate, and the page sends you to `/login`. After sign-in you return to `/` and the queue is still there to submit. The service worker never caches `/api/*`, `/login`, `/auth/*` or `/signed-out`, never stores a redirect or sign-in page as the app shell, and serves the cached shell when offline. A bookmarklet link opened while signed out keeps its `text`, `tags`, `url`, `title` and `sel` parameters: a ten-minute `__Host-drafts-return` cookie carries them through sign-in, and the callback returns to `/` with only those parameters. Text longer than about 3,800 encoded characters does not fit in the cookie and is not carried.
 
 ## Configuration
 

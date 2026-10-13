@@ -942,7 +942,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
         const text = p.get('text');
         if (text) {
-            const val = decodeURIComponent(text);
+            // Older bookmarklets double-encode; plain text with a bare % must not throw.
+            let val = text;
+            try { val = decodeURIComponent(text); } catch {}
             document.getElementById('draft-content').value = val;
             if (window.__editor) window.__editor.setValue(val);
             window.__resizeTextarea?.();
