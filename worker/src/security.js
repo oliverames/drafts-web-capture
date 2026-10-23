@@ -6,7 +6,7 @@ export const headers = {
   'Referrer-Policy': 'same-origin',
   'X-Frame-Options': 'DENY',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
-  // The PWA loads marked from jsdelivr and CodeMirror from esm.sh, and uses inline
+  // The PWA loads marked and DOMPurify from jsdelivr and CodeMirror from esm.sh, and uses inline
   // scripts and styles. Everything else is same-origin.
   'Content-Security-Policy': "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://esm.sh; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://esm.sh; worker-src 'self'; manifest-src 'self'; base-uri 'none'; frame-ancestors 'none'; form-action 'self'",
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=(self)',

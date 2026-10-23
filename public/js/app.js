@@ -465,10 +465,12 @@ document.addEventListener('DOMContentLoaded', function () {
                 em.className = 'preview-empty';
                 em.textContent = 'Nothing to preview yet.';
                 previewEl.appendChild(em);
-            } else if (isMarkdown && window.marked) {
-                const fragment = document.createRange().createContextualFragment(
-                    window.marked.parse(content)
-                );
+            } else if (isMarkdown && window.marked && window.DOMPurify) {
+                // marked passes raw HTML through, and draft text can come from a crafted
+                // ?text= link or a captured page selection, so the preview is sanitized.
+                const fragment = window.DOMPurify.sanitize(window.marked.parse(content), {
+                    RETURN_DOM_FRAGMENT: true,
+                });
                 fragment.querySelectorAll('a').forEach(a => {
                     a.target = '_blank';
                     a.rel = 'noopener noreferrer';
