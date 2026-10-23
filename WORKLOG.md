@@ -1,5 +1,21 @@
 # Worklog
 
+## 2026-10-23 - Security review: sanitized Markdown preview
+
+**What changed**:
+- The Markdown preview passed `marked` output straight into the page, and `marked` keeps raw HTML. A crafted `/?text=` link or a captured selection containing `<img src=x onerror=...>` ran script on drafts.amesvt.com once Preview was pressed, with access to the queued drafts and the Mail Drop address. The preview now runs through DOMPurify 3.4.16 and falls back to plain text if DOMPurify did not load.
+- `marked` was loaded as `marked@9` with no integrity check, so any new 9.x release would run here. It is now pinned to 9.1.6, and both CDN scripts carry SRI hashes checked against jsDelivr and unpkg.
+- The service worker cache is now v4 so installed copies pick up the new `app.js`.
+- Removed the unused `playwright` dependency, `.env.example` (settings for the retired password and Tailscale server) and a `.gitignore` comment about the removed CloudKit `config.js`.
+
+**Verification**: `npm test` passed 51 of 51. A jsdom check with the pinned `marked` and DOMPurify showed `onerror`, `<script>`, `<iframe>` and `javascript:` links removed while headings, emphasis and https links stayed. The lockfile diff removes only `playwright`, `playwright-core` and `fsevents`.
+
+**Left off at**: Not deployed. The fix reaches drafts.amesvt.com after `npm run deploy`.
+
+**Open questions**: None.
+
+---
+
 ## 2026-10-13 - Bookmarklet text survives sign-in; capture.amesvt.com is permanent
 
 **What changed**:
