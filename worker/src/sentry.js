@@ -19,7 +19,14 @@ export function sentryOptions(env) {
   return {
     dsn: env.SENTRY_DSN || undefined,
     environment: env.SENTRY_ENVIRONMENT || 'production',
-    sendDefaultPii: false,
+    // SDK 11 replaced sendDefaultPii with dataCollection, which collects everything by default.
+    dataCollection: {
+      userInfo: false, cookies: false, httpHeaders: false, httpBodies: [], urlQueryParams: false,
+      databaseQueryData: false, stackFrameVariables: false, queues: false,
+      graphQL: { document: false, variables: false },
+      genAI: { inputs: false, outputs: false },
+      mcp: { inputs: false, outputs: false },
+    },
     tracesSampleRate: 0,
     beforeSend,
   };

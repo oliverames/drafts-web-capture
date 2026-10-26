@@ -458,7 +458,11 @@ describe('sentry', () => {
   test('is off without a DSN and never sends PII or traces', () => {
     const options = sentryOptions({});
     assert.equal(options.dsn, undefined);
-    assert.equal(options.sendDefaultPii, false);
+    assert.equal(options.dataCollection.userInfo, false);
+    assert.equal(options.dataCollection.cookies, false);
+    assert.equal(options.dataCollection.httpHeaders, false);
+    assert.deepEqual(options.dataCollection.httpBodies, []);
+    assert.equal(options.dataCollection.urlQueryParams, false);
     assert.equal(options.tracesSampleRate, 0);
     assert.equal(options.environment, 'production');
   });

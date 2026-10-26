@@ -3,7 +3,7 @@
 ## 2026-10-26 - Sentry error reporting (not deployed)
 
 **What changed**:
-- The Worker export is wrapped with `Sentry.withSentry` from `@sentry/cloudflare` 11.9.0 (pinned exactly). Options live in `worker/src/sentry.js`: the DSN comes from the `SENTRY_DSN` secret, so the SDK is inert until it is set; `sendDefaultPii: false`; `tracesSampleRate: 0`; environment `production` unless `SENTRY_ENVIRONMENT` says otherwise.
+- The Worker export is wrapped with `Sentry.withSentry` from `@sentry/cloudflare` 11.9.0 (pinned exactly). Options live in `worker/src/sentry.js`: the DSN comes from the `SENTRY_DSN` secret, so the SDK is inert until it is set; `dataCollection` with every field off (SDK 11 removed `sendDefaultPii`, and `dataCollection` collects everything by default); `tracesSampleRate: 0`; environment `production` unless `SENTRY_ENVIRONMENT` says otherwise.
 - `beforeSend` keeps only the request method and the URL without its query string. It drops the request body, headers, cookies, query string and env, the user, and the culture context (the timezone from `request.cf`). Captured drafts never reach Sentry.
 - `wrangler.toml` adds `compatibility_flags = ["nodejs_compat"]`, which the SDK needs for AsyncLocalStorage, and a `CF_VERSION_METADATA` binding, which the SDK reports as the release.
 - Two tests cover the options and `beforeSend`.
