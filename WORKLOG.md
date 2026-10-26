@@ -1,5 +1,23 @@
 # Worklog
 
+## 2026-10-26 - Sentry error reporting (not deployed)
+
+**What changed**:
+- The Worker export is wrapped with `Sentry.withSentry` from `@sentry/cloudflare` 11.9.0 (pinned exactly). Options live in `worker/src/sentry.js`: the DSN comes from the `SENTRY_DSN` secret, so the SDK is inert until it is set; `sendDefaultPii: false`; `tracesSampleRate: 0`; environment `production` unless `SENTRY_ENVIRONMENT` says otherwise.
+- `beforeSend` keeps only the request method and the URL without its query string. It drops the request body, headers, cookies, query string and env, the user, and the culture context (the timezone from `request.cf`). Captured drafts never reach Sentry.
+- `wrangler.toml` adds `compatibility_flags = ["nodejs_compat"]`, which the SDK needs for AsyncLocalStorage, and a `CF_VERSION_METADATA` binding, which the SDK reports as the release.
+- Two tests cover the options and `beforeSend`.
+
+**Verification**: `npm test` passed 53 of 53, and `npm run dry-run` bundled and listed the new `CF_VERSION_METADATA` binding. Under `wrangler dev` with the DSN in `.dev.vars`, a temporary throwing route (removed before commit) received a POST carrying a JSON body, a cookie, a custom header, a query string and `CF-Connecting-IP`. Sentry event `5a53cc9937d64aeea30afa7c0514b824` arrived with environment `development` and a release, and its request had no body, headers, cookies or query; user IP was empty and none of the marker strings appeared anywhere in the event.
+
+**Left off at**: Not deployed. Production needs two steps, in order:
+1. `op read 'op://Development/Drafts Web Capture Sentry DSN/credential' | npx wrangler secret put SENTRY_DSN`
+2. `npm run deploy`
+
+**Open questions**: Sentry still attached a city-level `user.geo` derived server-side from the sending IP (here, the Mac). In production the sender is the Cloudflare data center, usually near the user. Turning on "Prevent Storing of IP Addresses" in the Sentry project's security settings should stop that; it was not changed here.
+
+---
+
 ## 2026-10-23 - Security review: sanitized Markdown preview
 
 **What changed**:

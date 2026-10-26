@@ -4,6 +4,8 @@
 import { APP_ORIGIN, AuthError, authenticated, callback, clearApp, clearFlow, login, logout, rememberReturn } from './auth.js';
 import { headers, json, redirect, withCookies } from './security.js';
 import { send } from './send.js';
+import * as Sentry from '@sentry/cloudflare';
+import { sentryOptions } from './sentry.js';
 
 // The signed-out page and what it and the installed app need before any sign-in. The web
 // app manifest is fetched without credentials, so it and its icons cannot sit behind the
@@ -40,7 +42,8 @@ async function throttle(request, env, route) {
   if (!allowed) throw new AuthError(429);
 }
 
-export default {
+// Wrapped for Sentry; see sentry.js for what an event may and may not contain.
+export default Sentry.withSentry(sentryOptions, {
   async fetch(request, env) {
     const url = new URL(request.url), path = url.pathname;
     if (url.origin !== APP_ORIGIN) return json({ error: 'Unknown host.' }, 404);
@@ -77,4 +80,4 @@ export default {
       return withCookies(await signInProblem(env, request, error.status), cookies);
     }
   },
-};
+});

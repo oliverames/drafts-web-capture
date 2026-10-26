@@ -114,6 +114,10 @@ Drafts queue in local storage when the network is down. If `/api/send` answers `
 | `AUTH_BROKER` | `wrangler.toml` | Service binding to `amesvt-auth#DraftsGateway` |
 | `LOGIN_LIMIT` | `wrangler.toml` | Rate limit on `/login` and `/auth/callback`, 10 per minute per route per IP. Namespace id `1302` (1301 is HVAC, 1001 to 1003 are other apps) |
 | `ASSETS` | `wrangler.toml` | Static assets from `./public`, with `run_worker_first = true` |
+| `SENTRY_DSN` | Worker secret (optional) | Turns on Sentry error reporting (`@sentry/cloudflare`, project `ames-consulting-llc/drafts-web-capture`). Unset, the SDK sends nothing. Set with `op read 'op://Development/Drafts Web Capture Sentry DSN/credential' \| npx wrangler secret put SENTRY_DSN` |
+| `CF_VERSION_METADATA` | `wrangler.toml` | Version metadata; Sentry reports the deployed version id as the release |
+
+Sentry events carry only the error, its stack, and the request method and path. `worker/src/sentry.js` strips the request body, headers, cookies, query string, user, IP address and timezone before an event leaves the Worker, and tracing is off (`tracesSampleRate: 0`). The SDK needs the `nodejs_compat` compatibility flag. For a local check, put `SENTRY_DSN` and `SENTRY_ENVIRONMENT=development` in the gitignored `.dev.vars`; deployed events report `production`.
 
 Run wrangler from the repository root. The old `worker/` proxy and its separate `wrangler.toml` are gone.
 

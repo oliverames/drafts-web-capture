@@ -1,6 +1,7 @@
 import { afterEach, describe, mock, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { BROKER, FILES, ORIGIN, OWNER, SESSION, call, cookieValue, form, identity, makeEnv, request, send, setCookies, startFlow, tok, withBroker } from './support/harness.js';
+import { beforeSend, sentryOptions } from '../worker/src/sentry.js';
 
 afterEach(() => mock.restoreAll());
 
@@ -451,4 +452,26 @@ describe('security headers', () => {
   });
 
   test('identity constants are the owner\'s', () => { assert.equal(OWNER, 'vSN-A-11wMQ9KATr-o5HLkc7E1H8BxVmB_GXaJ7BJcs'); });
+});
+
+describe('sentry', () => {
+  test('is off without a DSN and never sends PII or traces', () => {
+    const options = sentryOptions({});
+    assert.equal(options.dsn, undefined);
+    assert.equal(options.sendDefaultPii, false);
+    assert.equal(options.tracesSampleRate, 0);
+    assert.equal(options.environment, 'production');
+  });
+
+  test('beforeSend keeps only the request method and path', () => {
+    const event = beforeSend({
+      request: { method: 'POST', url: 'https://drafts.amesvt.com/api/send?draft=TOP+SECRET', data: '{"content":"TOP SECRET DRAFT"}', headers: { Cookie: '__Host-drafts=x' }, cookies: { '__Host-drafts': 'x' }, query_string: 'draft=TOP+SECRET', env: { REMOTE_ADDR: '203.0.113.9' } },
+      user: { ip_address: '203.0.113.9', email: 'oliverames@gmail.com' },
+      contexts: { culture: { timezone: 'America/New_York' }, cloud_resource: { 'cloud.provider': 'cloudflare' } },
+    });
+    assert.deepEqual(event.request, { method: 'POST', url: 'https://drafts.amesvt.com/api/send' });
+    assert.equal(event.user, undefined);
+    assert.deepEqual(event.contexts, { cloud_resource: { 'cloud.provider': 'cloudflare' } });
+    assert.doesNotMatch(JSON.stringify(event), /SECRET|203\.0\.113|oliverames|__Host-drafts/);
+  });
 });

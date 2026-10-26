@@ -4,12 +4,18 @@
 name = "drafts-capture"
 main = "worker/src/index.js"
 compatibility_date = "2026-10-01"
+# nodejs_compat gives the Sentry SDK (@sentry/cloudflare) the AsyncLocalStorage it needs.
+compatibility_flags = ["nodejs_compat"]
 
 # Reachable only on the custom domain: the broker's callback is fixed to drafts.amesvt.com,
 # and there is no workers.dev address or preview URL to leave unprotected.
 workers_dev = false
 preview_urls = false
 routes = [{ pattern = "drafts.amesvt.com", custom_domain = true }]
+
+# Sentry reads the deployed version id from this binding and reports it as the release.
+[version_metadata]
+binding = "CF_VERSION_METADATA"
 
 # The PWA in public/. run_worker_first sends every request through the Worker, which
 # checks the session before it reads from ASSETS. html_handling = "none" and
@@ -39,3 +45,5 @@ simple = { limit = 10, period = 60 }
 # Secrets are NOT set here. Use:
 #   npx wrangler secret put RESEND_API_KEY
 # (a send-only Resend key; the old drafts-ck-proxy Worker holds the current one)
+#   op read 'op://Development/Drafts Web Capture Sentry DSN/credential' | npx wrangler secret put SENTRY_DSN
+# (optional; without it Sentry stays off)
